@@ -6,6 +6,24 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
+    path: Assets/ReTuneScenes/Scenes/00_Start.unity
+    guid: 8cd4e1c0966198042b6aca5ee7481df2
+  - enabled: 1
+    path: Assets/ReTuneScenes/Scenes/01_Shop.unity
+    guid: 7e4d0615e6090c746b1a473e9af350b0
+  - enabled: 1
+    path: Assets/ReTuneScenes/Scenes/02_Parts.unity
+    guid: 3da52ec99dbd45146929b53b4b7e31a0
+  - enabled: 1
+    path: Assets/ReTuneScenes/Scenes/03_Performance.unity
+    guid: 99e53702cbce1b848ba1ca24f26635a7
+  - enabled: 1
+    path: Assets/ReTuneScenes/Scenes/04_Reply.unity
+    guid: b2ea42b7641895d48bea4395516b13c6
+  - enabled: 1
+    path: Assets/ReTuneScenes/Scenes/05_Ending.unity
+    guid: b25245cb95ab48049a5d8a74ab38ad06
+  - enabled: 1
     path: Assets/Scenes/SampleScene.unity
     guid: 8c9cfa26abfee488c85f1582747f6a02
   m_configObjects: {}

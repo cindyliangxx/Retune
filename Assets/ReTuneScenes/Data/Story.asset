@@ -1,0 +1,90 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e698ea0e692a4af0918d779463adb1c9, type: 3}
+  m_Name: Story
+  m_EditorClassIdentifier: 
+  customers:
+  - name: "Young Postman"
+    emotion: "Anxiety to Calm"
+    dialogue:
+    - "I delivered my first letter to the wrong address."
+    - "Now I check every address again and again."
+    - "I know it is right. I still cannot let go."
+    reply: "I will still check the address. Maybe once is enough.\nOutside, a photographer captures him pausing by the bookshop."
+    structure: 0
+    tone: 4
+    drift: 0.07
+    wave: 0.22
+    frequency: 0.9
+    impulse: 0
+    mostlyHold: 0
+  - name: "Street Guitarist"
+    emotion: "Anger to Understanding"
+    dialogue:
+    - "I argued with my longtime music partner."
+    - "He wants to improvise. I want every note to be right."
+    - "We used to play so well outside the bookshop."
+    reply: "I want to hear our old recordings again.\nHe sends a message: Shall we try your idea next time? No reply yet."
+    structure: 1
+    tone: 5
+    drift: 0.07
+    wave: 0.22
+    frequency: 0.9
+    impulse: 0.8
+    mostlyHold: 0
+  - name: "Bookshop Owner"
+    emotion: "Loss to Acceptance"
+    dialogue:
+    - "After twenty years, my bookshop is closing."
+    - "I am afraid its stories will be forgotten."
+    - "Someone sent me photos of our street. Perhaps I could make a small show."
+    reply: "It still hurts to close. But I can keep these stories.\nTwo photos: the musicians and the postman. The same photographer signed both."
+    structure: 2
+    tone: 4
+    drift: 0.19
+    wave: 0.1
+    frequency: 0.3
+    impulse: 0
+    mostlyHold: 1
+  - name: "Old Photographer"
+    emotion: "Longing to Hope"
+    dialogue:
+    - "A friend and I once planned to travel and fill a photo album."
+    - "Our letters grew rare. The album is still unfinished."
+    - "I took the photos at the bookshop. Yet I never sent my own letter."
+    reply: "The album can wait. I can send this letter today.\nHe writes his old friend's address and walks to the postbox."
+    structure: 3
+    tone: 5
+    drift: 0.07
+    wave: 0.22
+    frequency: 0.9
+    impulse: 0.45
+    mostlyHold: 0
+  parts:
+  - name: "Steady Wheel"
+    structure: 1
+    description: "Steadies a rushed or drifting beat."
+  - name: "Sync Wheel"
+    structure: 1
+    description: "Brings clashing rhythms together."
+  - name: "Sustain Spring"
+    structure: 1
+    description: "Connects broken phrases and holds notes."
+  - name: "Echo Wheel"
+    structure: 1
+    description: "Adds a gentle reply to a lone melody."
+  - name: "Soft Plate"
+    structure: 0
+    description: "Softens sharp sounds."
+  - name: "Warm Plate"
+    structure: 0
+    description: "Adds warmth and depth."
