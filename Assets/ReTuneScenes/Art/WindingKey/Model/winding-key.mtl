@@ -1,0 +1,7 @@
+newmtl AgedMetal
+Ka 0.16 0.13 0.12
+Kd 0.36 0.30 0.28
+Ks 0.30 0.27 0.25
+Ns 55
+illum 2
+
