@@ -33,6 +33,7 @@ namespace ReTune.Scenes
         bool holding, transitioning, frozen, audioPaused, loading;
         bool resonating;
         ReTuneStoryData.Customer Customer => story.customers[Mathf.Clamp(ReTuneSession.customer, 0, story.customers.Length - 1)];
+        public bool PartsAnimationPaused => frozen || loading;
         public bool CanInteract => !frozen && !transitioning && !loading;
         bool IsHold => Customer.mostlyHold ? note % 3 != 0 : ReTuneSession.customer == 0 ? note == 3 || note == 7 : note % 2 == 1;
         float Due => firstNoteTime + note * noteSpacing;
@@ -228,3 +229,4 @@ namespace ReTune.Scenes
         }
     }
 }
+

@@ -166,35 +166,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c76080a4eefd4c5fb4ad9584685c29fd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  stage: 0
-  customer: 0
-  line: 0
-  structure: -1
-  tone: -1
-  dragging: -1
-  note: 0
-  hits: 0
-  elapsed: 0
-  balance: 0
-  stableTime: 0
-  offTime: 0
-  holdTime: 0
-  response: 0
-  noise: 1
-  noiseTarget: 1
-  fade: 0
-  holding: 0
-  history: 0
-  paused: 0
-  transitioning: 0
-  tutorialClick: 0
-  tutorialHold: 0
-  audioFrozen: 0
-  hint: Welcome to Re:Tune.
-  tutorial: 
-  font: {fileID: 0}
-  tracks: []
-  generated: []
 --- !u!1 &519420028
 GameObject:
   m_ObjectHideFlags: 0

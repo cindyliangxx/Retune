@@ -24,6 +24,7 @@ namespace ReTune.Scenes
             for (int i = 0; i < visuals.Length; i++) spriteOrders[i] = visuals[i].sortingOrder;
             for (int i = 0; i < labels.Length; i++) labelOrders[i] = labels[i].sortingOrder;
         }
+        public void SetHome() { home = transform.localPosition; visuals = GetComponentsInChildren<SpriteRenderer>(true); spriteOrders = new int[visuals.Length]; for (int i = 0; i < visuals.Length; i++) spriteOrders[i] = visuals[i].sortingOrder; }
         public void PlaceInSlot(Collider2D slot)
         {
             removeAt = -1;
@@ -78,3 +79,5 @@ namespace ReTune.Scenes
         }
     }
 }
+
+
