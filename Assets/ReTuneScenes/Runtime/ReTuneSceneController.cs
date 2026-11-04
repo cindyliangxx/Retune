@@ -24,6 +24,10 @@ namespace ReTune.Scenes
         public Button trialButton, originalButton;
         [Header("Audio sources are pre-existing scene objects")]
         public AudioSource trackA, trackB, trackC;
+        [Header("邮差实验版：A 原声、B 回应、C 干扰，独立分轨同步播放")]
+        public bool usePostmanExperiment=true;
+        [Range(0,1)] public float postmanMusicVolume=.4f, postmanNoiseVolume=.25f;
+        bool postmanAudio;
         [Header("Prototype tuning")]
         public int noteCount = 8;
         public float noteSpacing = 3.2f, firstNoteTime = 2.3f, hitWindow = .55f, holdDuration = 1.25f;
@@ -43,6 +47,7 @@ namespace ReTune.Scenes
         void Start()
         {
             if (!ReTuneSession.active && screen != Screen.Menu && screen != Screen.Ending) ReTuneSession.Begin(previewCustomer);
+            ConfigurePostmanAudio();
             if (overlay != null) overlay.SetActive(false);
             frozen = false;
             if (customerLabel != null) customerLabel.text = "DAY 0" + (ReTuneSession.customer + 1) + "   " + Customer.name + "  /  " + Customer.emotion;
@@ -158,12 +163,20 @@ namespace ReTune.Scenes
         }
         public void ResetPerformance()
         {
+            var waveStage = GetComponent<ReTunePerformanceStage>();
+            if (waveStage != null) { transitioning = holding = false; response = noise = noiseTarget = 0; waveStage.ResetStage(); PlayAudio(); return; }
             time = balance = stableTime = offTime = holdTime = response = 0; note = hits = 0;
             holding = transitioning = false; noise = noiseTarget = 0;
             Set(hint, "A/D: stay green. Mouse: click or hold."); PlayAudio(); UpdatePerformanceUI();
         }
+        public void SetWaveMix(float amount) { response = Mathf.Clamp01(amount); }
+        public void CompleteWaveStage(int perfectHits, float stability)
+        {
+            ReTuneSession.hits=perfectHits; ReTuneSession.response=1; ReTuneSession.stability=stability; Load(Screen.Reply);
+        }
         void TickPerformance(float dt)
         {
+            if (GetComponent<ReTunePerformanceStage>() != null) return;
             if (ReTuneSession.customer == 0 && !ReTuneSession.taughtClick && time >= .7f)
             { ReTuneSession.taughtClick = true; ShowOverlay("How to Play", "Use A/D to stay in the green zone.\nClick when the rings meet.\nMissed notes do not end the song."); return; }
             if (ReTuneSession.customer == 0 && note == 3 && !ReTuneSession.taughtHold && time >= Due - 1.6f)
@@ -186,6 +199,7 @@ namespace ReTune.Scenes
         }
         public void NoteDown()
         {
+            var stage=GetComponent<ReTunePerformanceStage>(); if(stage!=null){stage.ClickQTE();return;}
             if (!CanInteract || screen != Screen.Performance || note >= noteCount || holding) return;
             if (Mathf.Abs(time - Due) > hitWindow) { response = Mathf.Max(0, response - .04f); Set(hint, "Wait for the rings to meet."); return; }
             if (IsHold) { holding = true; holdTime = 0; Set(hint, "Keep holding..."); } else ResolveNote(true);
@@ -207,11 +221,20 @@ namespace ReTune.Scenes
             Set(stats, "Balance " + (Stability * 100).ToString("0") + "%\nHits " + hits + " / " + noteCount);
             Set(noteLabel, (IsHold ? "Hold " + holdDuration.ToString("0.00") + " s" : "Click") + "\nNote " + Mathf.Min(note + 1, noteCount) + " / " + noteCount);
         }
+        void ConfigurePostmanAudio()
+        {
+            if (!usePostmanExperiment || ReTuneSession.customer != 0 || screen == Screen.Menu || screen == Screen.Ending) return;
+            var clips=new[] { Resources.Load<AudioClip>("Audio/PostmanExperiment/PostmanA"),Resources.Load<AudioClip>("Audio/PostmanExperiment/PostmanB"),Resources.Load<AudioClip>("Audio/PostmanExperiment/PostmanC") };
+            var sources=Sources();
+            for(int i=0;i<3;i++)if(clips[i]==null || sources[i]==null)return;
+            for(int i=0;i<3;i++){sources[i].Stop();sources[i].clip=clips[i];sources[i].loop=true;sources[i].pitch=1;sources[i].spatialBlend=0;sources[i].playOnAwake=false;}
+            postmanAudio=true;
+        }
         void UpdateMix()
         {
-            if (trackA != null) trackA.volume = .17f;
-            if (trackB != null) trackB.volume = response * .17f;
-            if (trackC != null) trackC.volume = noise * .08f;
+            if (trackA != null) trackA.volume = postmanAudio ? postmanMusicVolume : .17f;
+            if (trackB != null) trackB.volume = response * (postmanAudio ? postmanMusicVolume : .17f);
+            if (trackC != null) trackC.volume = noise * (postmanAudio ? postmanNoiseVolume : .08f);
             if (responseFill != null) responseFill.fillAmount = response;
             Set(mixLabel, "A Melody\nB Reply " + (response * 100).ToString("0") + "%\nC Noise " + (noise * 100).ToString("0") + "%");
         }
@@ -229,4 +252,7 @@ namespace ReTune.Scenes
         }
     }
 }
+
+
+
 
