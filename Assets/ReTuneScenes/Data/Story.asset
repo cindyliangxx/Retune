@@ -13,13 +13,44 @@ MonoBehaviour:
   m_Name: Story
   m_EditorClassIdentifier: 
   customers:
-  - name: "Young Postman"
-    emotion: "Anxiety to Calm"
+  - name: Young Postman
+    emotion: Anxiety to Calm
     dialogue:
-    - "I delivered my first letter to the wrong address."
-    - "Now I check every address again and again."
-    - "I know it is right. I still cannot let go."
-    reply: "I will still check the address. Maybe once is enough.\nOutside, a photographer captures him pausing by the bookshop."
+    - Day 1. A young postman arrives before his morning round. His fingers keep folding
+      the edge of a delivery slip.
+    - 'Postman: Is this the tuning shop? I heard you help when a tune will not settle.'
+    - 'Tuner: I have only just taken over. But you can sit down. What keeps returning
+      to you?'
+    - 'Postman: My first week, I delivered a letter to the wrong address. I got it
+      back, but I cannot stop thinking about it.'
+    - 'Postman: Now I read every address again and again. Even after I know it is
+      right, I go back to check.'
+    - 'Tuner: Does checking help you feel ready to leave?'
+    - 'Postman: For a second. Then I wonder whether I missed something. My whole
+      round falls behind.'
+    - 'Tuner: We do not have to take away your care. Perhaps we can give it a steadier
+      rhythm.'
+    - 'Postman: A rhythm I can trust? I would like to hear that.'
+    - 'Tuner: Rest your hand on the lid. Let the music box listen.'
+    - The box answers with a hurried melody and uneven mechanical sounds.
+    reply: 'Postman: The tune is still quick. But it does not feel as though it is
+      chasing me anymore.
+
+
+      Tuner: It is still your melody. There is simply
+      room to breathe between the notes.
+
+
+      Postman: I will check the address.
+      Once, carefully. Then I will try to keep walking.
+
+
+      Tuner: That sounds
+      like a place to start.
+
+
+      The postman folds the delivery slip and puts
+      it away.'
     structure: 0
     tone: 4
     drift: 0.07
@@ -27,13 +58,44 @@ MonoBehaviour:
     frequency: 0.9
     impulse: 0
     mostlyHold: 0
-  - name: "Street Guitarist"
-    emotion: "Anger to Understanding"
+  - name: Street Guitarist
+    emotion: Anger to Understanding
     dialogue:
-    - "I argued with my longtime music partner."
-    - "He wants to improvise. I want every note to be right."
-    - "We used to play so well outside the bookshop."
-    reply: "I want to hear our old recordings again.\nHe sends a message: Shall we try your idea next time? No reply yet."
+    - Day 4. A guitarist arrives with a worn instrument case. He taps a sharp rhythm
+      against its handle.
+    - 'Guitarist: My partner says I never leave him any room. I say he never plays
+      what we agreed.'
+    - 'Tuner: You have been playing together for a long time?'
+    - 'Guitarist: Since we used to set up outside the bookshop. We could draw a crowd
+      with almost nothing.'
+    - 'Guitarist: Now he wants to improvise every set. I work on the arrangement,
+      and he changes it in front of everyone.'
+    - 'Tuner: What do you hear when he changes it?'
+    - 'Guitarist: That what I brought was not enough. So I play harder, and he plays
+      over me. Last time we stopped speaking.'
+    - 'Tuner: Could his reply be an invitation, even if the way he offers it hurts?'
+    - 'Guitarist: Maybe. I am not ready to say he was right.'
+    - 'Tuner: You do not have to. Let us first hear both parts without making either
+      disappear.'
+    - He rests his hand on the lid. Strong beats collide with rough, displaced accents.
+    reply: 'Guitarist: It still has some bite. Good. I did not want you to make it
+      polite.
+
+
+      Tuner: The strength can stay. Listen to the space where the
+      other phrase answers.
+
+
+      Guitarist: I can hear it now. He was trying to
+      join in. Not every time, perhaps. But some of the time.
+
+
+      Guitarist:
+      I should listen to our old recordings before I decide there is nothing left
+      to say.
+
+
+      Tuner: You can decide what to send after that.'
     structure: 1
     tone: 5
     drift: 0.07
@@ -41,13 +103,82 @@ MonoBehaviour:
     frequency: 0.9
     impulse: 0.8
     mostlyHold: 0
-  - name: "Bookshop Owner"
-    emotion: "Loss to Acceptance"
+  - name: Bookshop Owner
+    emotion: Loss to Acceptance
     dialogue:
-    - "After twenty years, my bookshop is closing."
-    - "I am afraid its stories will be forgotten."
-    - "Someone sent me photos of our street. Perhaps I could make a small show."
-    reply: "It still hurts to close. But I can keep these stories.\nTwo photos: the musicians and the postman. The same photographer signed both."
+    - 'Owner: Hello there. Hope I''m not interrupting anything.'
+    - 'Tuner: Not at all. Please come in.'
+    - 'Owner: Thanks. I run the bookshop around the corner. You might''ve seen it.'
+    - 'Tuner: Oh, yeah! I walk past it every day.'
+    - 'Owner: I''ve been meaning to stop by. Used to know the previous owner of this
+      place.'
+    - 'Owner: But I never thought I''d come here looking for help.'
+    - 'Owner: Anyway... I''m closing the bookshop soon. After more than twenty years...'
+    - 'Tuner: Oh... I''m sorry to hear that.'
+    - 'Owner: I knew this day would come eventually.'
+    - 'Owner: It''s just... You spend so long in one place, you start thinking it''ll
+      always be there...'
+    - 'Tuner: Twenty years is such a long time.'
+    - 'Owner: It is. I''ve watched so many kids grow up. Some of them even come back
+      with their babies now.'
+    - 'Owner: And I keep thinking... once I lock that door for the last time, will
+      any of it matter anymore?'
+    - 'Tuner: I believe it means a lot to you.'
+    - 'Owner: Yeah. More than I realised, I think... These days, the sadness keeps
+      me awake most nights.'
+    - 'Owner: May I try that magic music box? I''ve heard things about it.'
+    - 'Tuner: Of course. Just put your hand on the lid.'
+    - 'Owner: ...Huh. That reminds me of the shop after everyone''s gone home.'
+    - 'Tuner: Let''s see what we can do.'
+    reply: 'Owner: That''s lovely... Still a little sad, though.
+
+
+      Tuner: I
+      guess that''s alright. You don''t have to stop being sad about it.
+
+
+      Owner:
+      You know, I''ve been so busy thinking about the shop closing, I almost forgot
+      how much happened while it was open.
+
+
+      Owner: Oh! Actually, let me show
+      you something.
+
+
+      Owner: I''m planning a memory exhibition. These are
+      some of the photos that''ll be on display.
+
+
+      Tuner: Wow, meaningful !
+
+
+      Owner:
+      I''ve got years of photos, old notes, little things people left behind.
+
+
+      Owner:
+      I was just going to put them away, but... maybe I should show them to more
+      people.
+
+
+      Tuner: That sounds wonderful. I''d love to come.
+
+
+      Owner:
+      Really? Well, see you then!
+
+
+      Owner: I''m still going to miss the place.
+      But maybe closing the shop doesn''t mean losing everything that happened there.
+
+
+      Tuner:
+      I''m sure a lot of people will be happy to see those memories.
+
+
+      Owner:
+      I hope so. Well then, I''d better get things ready. Thank you, dear.'
     structure: 2
     tone: 4
     drift: 0.19
@@ -55,13 +186,52 @@ MonoBehaviour:
     frequency: 0.3
     impulse: 0
     mostlyHold: 1
-  - name: "Old Photographer"
-    emotion: "Longing to Hope"
+  - name: Old Photographer
+    emotion: Longing to Hope
     dialogue:
-    - "A friend and I once planned to travel and fill a photo album."
-    - "Our letters grew rare. The album is still unfinished."
-    - "I took the photos at the bookshop. Yet I never sent my own letter."
-    reply: "The album can wait. I can send this letter today.\nHe writes his old friend's address and walks to the postbox."
+    - Day 12. An older photographer enters. A camera hangs at his side; an unfinished
+      envelope rests in his coat pocket.
+    - 'Photographer: The bookshop owner told me about your music box. I am Michael.'
+    - 'Tuner: I saw your signature in her album. The musicians, and the postman at
+      the window.'
+    - 'Michael: I gave her those pictures before she planned the display. A street
+      changes quietly. I wanted her to have something of it.'
+    - 'Tuner: You have kept many people''s memories.'
+    - 'Michael: More easily than my own, it seems. A friend and I once meant to travel
+      together and make an album.'
+    - 'Michael: We kept postponing it. Then our letters became shorter, and then
+      there were no letters at all.'
+    - 'Tuner: Do you know where your friend lives?'
+    - 'Michael: I still have the address. I have written it on this envelope more
+      times than I care to admit.'
+    - 'Michael: I do not know how to explain the years. The album is unfinished.
+      I have nothing grand enough to send.'
+    - 'Tuner: A letter does not have to finish the whole story. It can ask whether
+      there is room for another page.'
+    - 'Michael: Then let us hear what an unfinished song can do.'
+    - He rests his hand on the lid. A solitary melody leaves room for an answer that
+      has not yet arrived.
+    reply: 'Michael: That second voice does not answer every note.
+
+
+      Tuner:
+      It can leave some space. The first voice is still there.
+
+
+      Michael: I
+      have been waiting to send the perfect letter, as though that could make up
+      for all the quiet.
+
+
+      Michael: I could simply say I remember. And ask
+      how my friend has been.
+
+
+      Tuner: You already know the address.
+
+
+      Michael
+      takes out the envelope. This time, he begins the letter.'
     structure: 3
     tone: 5
     drift: 0.07
@@ -70,21 +240,21 @@ MonoBehaviour:
     impulse: 0.45
     mostlyHold: 0
   parts:
-  - name: "Steady Wheel"
+  - name: Steady Wheel
     structure: 1
-    description: "Steadies a rushed or drifting beat."
-  - name: "Sync Wheel"
+    description: Steadies a rushed or drifting beat.
+  - name: Sync Wheel
     structure: 1
-    description: "Brings clashing rhythms together."
-  - name: "Sustain Spring"
+    description: Brings clashing rhythms together.
+  - name: Sustain Spring
     structure: 1
-    description: "Connects broken phrases and holds notes."
-  - name: "Echo Wheel"
+    description: Connects broken phrases and holds notes.
+  - name: Echo Wheel
     structure: 1
-    description: "Adds a gentle reply to a lone melody."
-  - name: "Soft Plate"
+    description: Adds a gentle reply to a lone melody.
+  - name: Soft Plate
     structure: 0
-    description: "Softens sharp sounds."
-  - name: "Warm Plate"
+    description: Softens sharp sounds.
+  - name: Warm Plate
     structure: 0
-    description: "Adds warmth and depth."
+    description: Adds warmth and depth.

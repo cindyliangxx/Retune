@@ -73,6 +73,11 @@ namespace ReTune.Scenes
         Image pointerImage;
         public void ResetStage()
         {
+            // 四位顾客逐步改变漂移速度与目标停留时间；沿用当前持续控制加点击玩法。
+            if(ReTuneSession.customer==0){driftSpeed=9;targetChangeInterval=new Vector2(6,9);}
+            else if(ReTuneSession.customer==1){driftSpeed=14;targetChangeInterval=new Vector2(5,7);}
+            else if(ReTuneSession.customer==2){driftSpeed=5;targetChangeInterval=new Vector2(9,12);}
+            else {driftSpeed=12;targetChangeInterval=new Vector2(5,8);}
             playerAngle=40;ChooseTarget();driftDirection=1;Progress=0;wait=1;age=phase=elapsed=alignedTime=successPulse=missPulse=clearDelay=0;
             hits=0;beatIndex=audioLoops=0;previousAudioTime=0;QTEActive=completed=false;initialized=true;
             if(pointerVisual!=null)pointerImage=pointerVisual.GetComponent<Image>();
@@ -157,6 +162,7 @@ namespace ReTune.Scenes
         public Vector3 Point(float angle){float a=angle*Mathf.Deg2Rad;return new Vector3(trackCenter.x+Mathf.Cos(a)*trackRadius,trackCenter.y+Mathf.Sin(a)*trackRadius,0);}
     }
 }
+
 
 
 

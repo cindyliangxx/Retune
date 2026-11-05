@@ -16,7 +16,7 @@ public static class ReTuneSceneBuilder
     static Font font;
     static Sprite circle, ring, square, sector;
     static ReTuneStoryData data;
-    static readonly Color Bg = new Color(.065f,.09f,.10f), Panel = new Color(.13f,.18f,.18f), Ink = new Color(.91f,.88f,.79f), Muted = new Color(.60f,.67f,.65f), Gold = new Color(.77f,.58f,.31f), Green = new Color(.30f,.51f,.39f);
+    static readonly Color Bg = new Color(.46f,.37f,.32f), Panel = new Color(.91f,.85f,.73f), Ink = new Color(.29f,.22f,.20f), Muted = new Color(.43f,.34f,.29f), Gold = new Color(.64f,.43f,.23f), Green = new Color(.48f,.54f,.39f);
     static ReTuneSceneController c;
     static Transform canvas;
     [MenuItem("ReTune/Scenes/Open Start")]
@@ -26,7 +26,7 @@ public static class ReTuneSceneBuilder
     {
         if (!Application.isBatchMode && !EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;
         foreach (var folder in new[] { "Scenes", "Data", "UI", "Audio" }) Directory.CreateDirectory(Root + "/" + folder);
-        font = AssetDatabase.LoadAssetAtPath<Font>(Root + "/Fonts/ReTuneChinese.ttf");
+        font = AssetDatabase.LoadAssetAtPath<Font>("Assets/Resources/Fonts/LeMiShiguang.ttf");
         if (font == null) throw new Exception("Missing scene font");
         circle = Shape("Circle", false); ring = Shape("Ring", true); square = Shape("Square", false); sector = Shape("StableSector", false);
         data = AssetDatabase.LoadAssetAtPath<ReTuneStoryData>(Root + "/Data/Story.asset");
@@ -235,12 +235,12 @@ public static class ReTuneSceneBuilder
     static Image ImageBox(Transform parent,string name,float x,float y,float w,float h,Color color,Sprite sprite = null)
     { var rt=Rect(parent,name,x,y,w,h); var image=rt.gameObject.AddComponent<Image>(); image.color=color; image.sprite=sprite; image.raycastTarget=false; return image; }
     static Text Txt(Transform parent,string name,string text,float x,float y,float w,float h,int size,Color color)
-    { var rt=Rect(parent,name,x,y,w,h); var label=rt.gameObject.AddComponent<Text>(); label.font=font; label.fontSize=size; label.text=text; label.color=color; label.raycastTarget=false; label.horizontalOverflow=HorizontalWrapMode.Wrap; label.verticalOverflow=VerticalWrapMode.Truncate; return label; }
+    { var rt=Rect(parent,name,x,y,w,h); var label=rt.gameObject.AddComponent<Text>(); label.font=font; label.fontSize=50; label.resizeTextForBestFit=false; label.resizeTextMinSize=50; label.resizeTextMaxSize=50; label.text=text; label.color=color; label.raycastTarget=false; label.horizontalOverflow=HorizontalWrapMode.Wrap; label.verticalOverflow=VerticalWrapMode.Truncate; return label; }
     static Button Btn(Transform parent,string name,string text,float x,float y,float w,float h,UnityAction action)
     {
-        var image=ImageBox(parent,name,x,y,w,h,Panel); image.raycastTarget=true;
+        w=Mathf.Max(w,220); h=Mathf.Max(h,80); var image=ImageBox(parent,name,x,y,w,h,Panel); image.raycastTarget=true;
         var button=image.gameObject.AddComponent<Button>(); button.targetGraphic=image;
-        var colors=button.colors; colors.normalColor=Color.white; colors.highlightedColor=new Color(1.25f,1.2f,1.1f); colors.pressedColor=Gold; button.colors=colors;
+        var colors=button.colors; colors.normalColor=Color.white; colors.highlightedColor=new Color(1.05f,1.03f,.98f); colors.pressedColor=Gold; button.colors=colors;
         var label=Txt(image.transform,"Label",text,8,4,w-16,h-8,20,Ink); label.alignment=TextAnchor.MiddleCenter;
         UnityEventTools.AddPersistentListener(button.onClick,action); return button;
     }
@@ -285,3 +285,6 @@ public static class ReTuneSceneBuilder
         EditorBuildSettings.scenes=existing.ToArray();
     }
 }
+
+
+

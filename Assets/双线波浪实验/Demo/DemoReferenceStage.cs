@@ -139,8 +139,11 @@ public sealed class DemoReferenceStage : MonoBehaviour
         message=success?"Perfect":"Miss"; index++; holding=false;
     }
     Rect HitArea() => new Rect(Screen.width*.55f-65,Screen.height*.5f-65,130,130);
+    Font interfaceFont;
     void OnGUI()
     {
+        if(interfaceFont==null)interfaceFont=Resources.Load<Font>("Fonts/LeMiShiguang");
+        if(interfaceFont!=null)GUI.skin.font=interfaceFont;
         GUI.color=new Color(.85f,.9f,1);
         if(GUI.Button(new Rect(20,20,130,32),playing?"Restart stage":"Start stage")) Restart();
         if(GUI.Button(new Rect(165,20,130,32),"Return to start"))
@@ -169,3 +172,4 @@ public sealed class DemoReferenceStage : MonoBehaviour
     void OnDestroy()
     { if(materials!=null) foreach(var material in materials) if(material!=null) Destroy(material); if(ring!=null) Destroy(ring); }
 }
+

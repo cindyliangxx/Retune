@@ -1,0 +1,147 @@
+{
+  "opening": [
+    "Morning light reaches the old street. A weathered sign above a quiet shop reads Re:Tune.",
+    "The previous owner left me a set of old keys. Today, I have come to open the shop.",
+    "The key fits. For a moment, I leave my hand against the lock.",
+    "I turn the handle and push the door open.",
+    "Inside, the shop is quiet. Sunlight finds the shelves and the empty counter.",
+    "A letter waits beside an ancient music box. Both were left in my care.",
+    "Dear friend, when this letter reaches you, I'll probably be gone. Thanks for taking the shop from me. Promise you'll keep it going.",
+    "I fold the letter carefully. \"I promise you, I will.\"",
+    "I turn toward the music box. A soft mechanical click, then a few clear notes. The shop is ready to begin again."
+  ],
+  "ending": [
+    "Michael stops beside the postbox. His friend's address is already written on the envelope.",
+    "For a moment, his hand stays still. Then he lets the letter fall through the slot.",
+    "A few days later.",
+    "The young postman sorts the morning letters. One envelope catches the light. The sender has signed it Michael.",
+    "He checks the address once. Then he carries the letter to the right door and places it in the mailbox.",
+    "Some things cannot be put back as they were. A melody can still find another voice.",
+    "Re:Tune\nThank you for listening.\n\nThe end."
+  ],
+  "customers": [
+    {
+      "dialogue": [
+        "Day 1. A young postman arrives before his morning round. His fingers keep folding the edge of a delivery slip.",
+        "Postman: Is this the tuning shop? I heard you help when a tune will not settle.",
+        "Tuner: I have only just taken over. But you can sit down. What keeps returning to you?",
+        "Postman: My first week, I delivered a letter to the wrong address. I got it back, but I cannot stop thinking about it.",
+        "Postman: Now I read every address again and again. Even after I know it is right, I go back to check.",
+        "Tuner: Does checking help you feel ready to leave?",
+        "Postman: For a second. Then I wonder whether I missed something. My whole round falls behind.",
+        "Tuner: We do not have to take away your care. Perhaps we can give it a steadier rhythm.",
+        "Postman: A rhythm I can trust? I would like to hear that.",
+        "Tuner: Rest your hand on the lid. Let the music box listen.",
+        "The box answers with a hurried melody and uneven mechanical sounds."
+      ],
+      "reply": [
+        "Postman: The tune is still quick. But it does not feel as though it is chasing me anymore.",
+        "Tuner: It is still your melody. There is simply room to breathe between the notes.",
+        "Postman: I will check the address. Once, carefully. Then I will try to keep walking.",
+        "Tuner: That sounds like a place to start.",
+        "The postman folds the delivery slip and puts it away."
+      ],
+      "departure": [
+        "Later that morning, he pauses outside the old bookshop. For once, he is looking through the window instead of rereading an address.",
+        "Across the street, an older man raises a camera. The shutter clicks.",
+        "A few days pass. The shop bell rings again."
+      ]
+    },
+    {
+      "dialogue": [
+        "Day 4. A guitarist arrives with a worn instrument case. He taps a sharp rhythm against its handle.",
+        "Guitarist: My partner says I never leave him any room. I say he never plays what we agreed.",
+        "Tuner: You have been playing together for a long time?",
+        "Guitarist: Since we used to set up outside the bookshop. We could draw a crowd with almost nothing.",
+        "Guitarist: Now he wants to improvise every set. I work on the arrangement, and he changes it in front of everyone.",
+        "Tuner: What do you hear when he changes it?",
+        "Guitarist: That what I brought was not enough. So I play harder, and he plays over me. Last time we stopped speaking.",
+        "Tuner: Could his reply be an invitation, even if the way he offers it hurts?",
+        "Guitarist: Maybe. I am not ready to say he was right.",
+        "Tuner: You do not have to. Let us first hear both parts without making either disappear.",
+        "He rests his hand on the lid. Strong beats collide with rough, displaced accents."
+      ],
+      "reply": [
+        "Guitarist: It still has some bite. Good. I did not want you to make it polite.",
+        "Tuner: The strength can stay. Listen to the space where the other phrase answers.",
+        "Guitarist: I can hear it now. He was trying to join in. Not every time, perhaps. But some of the time.",
+        "Guitarist: I should listen to our old recordings before I decide there is nothing left to say.",
+        "Tuner: You can decide what to send after that."
+      ],
+      "departure": [
+        "A small flip phone opens. An unsent message waits on its screen.",
+        "Wanna try that improvised set you were talking about next time?",
+        "He sends it. There is no reply yet. He closes the phone and takes his instrument case.",
+        "Several days later, another familiar face from the old street comes to Re:Tune."
+      ]
+    },
+    {
+      "dialogue": [
+        "Owner: Hello there. Hope I'm not interrupting anything.",
+        "Tuner: Not at all. Please come in.",
+        "Owner: Thanks. I run the bookshop around the corner. You might've seen it.",
+        "Tuner: Oh, yeah! I walk past it every day.",
+        "Owner: I've been meaning to stop by. Used to know the previous owner of this place.",
+        "Owner: But I never thought I'd come here looking for help.",
+        "Owner: Anyway... I'm closing the bookshop soon. After more than twenty years...",
+        "Tuner: Oh... I'm sorry to hear that.",
+        "Owner: I knew this day would come eventually.",
+        "Owner: It's just... You spend so long in one place, you start thinking it'll always be there...",
+        "Tuner: Twenty years is such a long time.",
+        "Owner: It is. I've watched so many kids grow up. Some of them even come back with their babies now.",
+        "Owner: And I keep thinking... once I lock that door for the last time, will any of it matter anymore?",
+        "Tuner: I believe it means a lot to you.",
+        "Owner: Yeah. More than I realised, I think... These days, the sadness keeps me awake most nights.",
+        "Owner: May I try that magic music box? I've heard things about it.",
+        "Tuner: Of course. Just put your hand on the lid.",
+        "Owner: ...Huh. That reminds me of the shop after everyone's gone home.",
+        "Tuner: Let's see what we can do."
+      ],
+      "reply": [
+        "Owner: That's lovely... Still a little sad, though.",
+        "Tuner: I guess that's alright. You don't have to stop being sad about it.",
+        "Owner: You know, I've been so busy thinking about the shop closing, I almost forgot how much happened while it was open.",
+        "Owner: Oh! Actually, let me show you something.",
+        "Owner: I'm planning a memory exhibition. These are some of the photos that'll be on display.",
+        "Tuner: Wow, meaningful !",
+        "Owner: I've got years of photos, old notes, little things people left behind.",
+        "Owner: I was just going to put them away, but... maybe I should show them to more people.",
+        "Tuner: That sounds wonderful. I'd love to come.",
+        "Owner: Really? Well, see you then!",
+        "Owner: I'm still going to miss the place. But maybe closing the shop doesn't mean losing everything that happened there.",
+        "Tuner: I'm sure a lot of people will be happy to see those memories.",
+        "Owner: I hope so. Well then, I'd better get things ready. Thank you, dear."
+      ],
+      "departure": []
+    },
+    {
+      "dialogue": [
+        "Day 12. An older photographer enters. A camera hangs at his side; an unfinished envelope rests in his coat pocket.",
+        "Photographer: The bookshop owner told me about your music box. I am Michael.",
+        "Tuner: I saw your signature in her album. The musicians, and the postman at the window.",
+        "Michael: I gave her those pictures before she planned the display. A street changes quietly. I wanted her to have something of it.",
+        "Tuner: You have kept many people's memories.",
+        "Michael: More easily than my own, it seems. A friend and I once meant to travel together and make an album.",
+        "Michael: We kept postponing it. Then our letters became shorter, and then there were no letters at all.",
+        "Tuner: Do you know where your friend lives?",
+        "Michael: I still have the address. I have written it on this envelope more times than I care to admit.",
+        "Michael: I do not know how to explain the years. The album is unfinished. I have nothing grand enough to send.",
+        "Tuner: A letter does not have to finish the whole story. It can ask whether there is room for another page.",
+        "Michael: Then let us hear what an unfinished song can do.",
+        "He rests his hand on the lid. A solitary melody leaves room for an answer that has not yet arrived."
+      ],
+      "reply": [
+        "Michael: That second voice does not answer every note.",
+        "Tuner: It can leave some space. The first voice is still there.",
+        "Michael: I have been waiting to send the perfect letter, as though that could make up for all the quiet.",
+        "Michael: I could simply say I remember. And ask how my friend has been.",
+        "Tuner: You already know the address.",
+        "Michael takes out the envelope. This time, he begins the letter."
+      ],
+      "departure": [
+        "He signs his name: Michael.",
+        "The album can remain unfinished a little longer. Today, there is a letter to post."
+      ]
+    }
+  ]
+}

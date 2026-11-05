@@ -36,6 +36,8 @@ namespace ReTune.Scenes
         float time, balance, stableTime, offTime, holdTime, response, noise = 1, noiseTarget = 1, transitionTime;
         bool holding, transitioning, frozen, audioPaused, loading;
         bool resonating;
+        bool UsesGameplayMusic => screen==Screen.Parts||screen==Screen.Performance;
+        string[] historyPages;int historyPage;
         ReTuneStoryData.Customer Customer => story.customers[Mathf.Clamp(ReTuneSession.customer, 0, story.customers.Length - 1)];
         public bool PartsAnimationPaused => frozen || loading;
         public bool CanInteract => !frozen && !transitioning && !loading;
@@ -52,8 +54,10 @@ namespace ReTune.Scenes
             frozen = false;
             if (customerLabel != null) customerLabel.text = "DAY 0" + (ReTuneSession.customer + 1) + "   " + Customer.name + "  /  " + Customer.emotion;
             if (portraits != null) for (int i = 0; i < portraits.Length; i++) if (portraits[i] != null) portraits[i].SetActive(i == ReTuneSession.customer);
+            var narrative=GetComponent<ReTuneNarrativePlayer>();
+            if(narrative!=null){narrative.Begin(this);UpdateMix();return;}
             if (screen == Screen.Shop) RefreshDialogue();
-            else if (screen == Screen.Parts) { RefreshSlots(); PlayAudio(); }
+            else if (screen == Screen.Parts) { RefreshSlots(); PlayAudio(); if(ReTuneSession.customer==0&&!ReTuneSession.taughtParts){ReTuneSession.taughtParts=true;ShowOverlay("Inside the Music Box","Review the visitor conversation and listen to the original melody. Drag one rhythm part and one tone part into their slots. Double-click a part for details. Wind the key to test your choice.");} }
             else if (screen == Screen.Performance) ResetPerformance();
             else if (screen == Screen.Reply) { Set(body, Customer.reply); Set(actionLabel, ReTuneSession.customer < story.customers.Length - 1 ? "Next Day" : "Epilogue"); response = ReTuneSession.response; noise = noiseTarget = 0; PlayAudio(); }
             UpdateMix();
@@ -77,6 +81,7 @@ namespace ReTune.Scenes
         public void StartHealing() { if (!CanInteract) return; ReTuneSession.Reset(); ReTuneSession.Begin(0); Load(Screen.Shop); }
         public void ContinueStory()
         {
+            var narrative=GetComponent<ReTuneNarrativePlayer>();if(narrative!=null){narrative.Next();return;}
             if (!CanInteract) return;
             if (screen == Screen.Shop)
             {
@@ -88,6 +93,7 @@ namespace ReTune.Scenes
             else if (screen == Screen.Reply)
             { if (ReTuneSession.customer < story.customers.Length - 1) { ReTuneSession.Begin(ReTuneSession.customer + 1); Load(Screen.Shop); } else Load(Screen.Ending); }
         }
+        public void NarrativeAudio(bool healed){response=healed?1:0;noise=noiseTarget=healed?0:1;PlayAudio();}
         void RefreshDialogue() { Set(body, Customer.dialogue[line]); Set(actionLabel, line < Customer.dialogue.Length - 1 ? "Next" : "Touch Music Box"); }
         public void TouchMusicBox()
         {
@@ -95,11 +101,15 @@ namespace ReTune.Scenes
             if (line < Customer.dialogue.Length - 1) { Set(hint, "Finish the dialogue first."); return; }
             ContinueStory();
         }
-        public void ShowHistory() { if (CanInteract) ShowOverlay("Dialogue / " + Customer.name, string.Join("\n\n", Customer.dialogue)); }
-        public void Pause() { ShowOverlay("Paused", "Select Continue to resume."); }
+        public void ShowHistory()
+        {
+            if(!CanInteract)return;historyPages=Customer.dialogue;historyPage=0;
+            ShowOverlay("Review / "+Customer.name,historyPages[historyPage]);
+        }
+        public void Pause() { historyPages=null; ShowOverlay("Paused", "Select Continue to resume."); }
         void ShowOverlay(string title, string text)
         { if (holding) ResolveNote(false); frozen = true; Set(overlayTitle, title); Set(overlayBody, text); if (overlay != null) overlay.SetActive(true); }
-        public void CloseOverlay() { frozen = false; if (overlay != null) overlay.SetActive(false); }
+        public void CloseOverlay() { if(historyPages!=null && !Input.GetKeyDown(KeyCode.Escape) && ++historyPage<historyPages.Length){Set(overlayBody,historyPages[historyPage]);return;} historyPages=null;frozen = false; if (overlay != null) overlay.SetActive(false); }
         public void MainMenu() { if (loading) return; ReTuneSession.Reset(); Load(Screen.Menu); }
         public void RestartPhase()
         {
@@ -126,7 +136,7 @@ namespace ReTune.Scenes
             bool intoTone = toneSlot.OverlapPoint(point);
             if (!intoStructure && !intoTone) { Set(hint, "Drop a part into a slot."); return; }
             if (story.parts[index].structure != intoStructure) { Set(hint, "Wrong slot type."); return; }
-            InstallPart(index); Set(hint, "Part fitted. Select Test.");
+            InstallPart(index); Set(hint, "Part fitted. Wind the key to listen.");
         }
         public void InstallPart(int index)
         {
@@ -164,7 +174,7 @@ namespace ReTune.Scenes
         public void ResetPerformance()
         {
             var waveStage = GetComponent<ReTunePerformanceStage>();
-            if (waveStage != null) { transitioning = holding = false; response = noise = noiseTarget = 0; waveStage.ResetStage(); PlayAudio(); return; }
+            if (waveStage != null) { transitioning = holding = false; response = noise = noiseTarget = 0; waveStage.ResetStage(); PlayAudio(); if(ReTuneSession.customer==0&&!ReTuneSession.taughtClick){ReTuneSession.taughtClick=true;ShowOverlay("How to Tune","Hold A / D to keep the needle in the blue arc. Gold gives faster progress. Click the music note when its rings meet. Reach full harmony to continue.");}return; }
             time = balance = stableTime = offTime = holdTime = response = 0; note = hits = 0;
             holding = transitioning = false; noise = noiseTarget = 0;
             Set(hint, "A/D: stay green. Mouse: click or hold."); PlayAudio(); UpdatePerformanceUI();
@@ -223,7 +233,8 @@ namespace ReTune.Scenes
         }
         void ConfigurePostmanAudio()
         {
-            if (!usePostmanExperiment || ReTuneSession.customer != 0 || screen == Screen.Menu || screen == Screen.Ending) return;
+            if (!UsesGameplayMusic){foreach(var source in Sources())if(source!=null){source.Stop();source.playOnAwake=false;}return;}
+            if (!usePostmanExperiment || ReTuneSession.customer != 0) return;
             var clips=new[] { Resources.Load<AudioClip>("Audio/PostmanExperiment/PostmanA"),Resources.Load<AudioClip>("Audio/PostmanExperiment/PostmanB"),Resources.Load<AudioClip>("Audio/PostmanExperiment/PostmanC") };
             var sources=Sources();
             for(int i=0;i<3;i++)if(clips[i]==null || sources[i]==null)return;
@@ -232,14 +243,14 @@ namespace ReTune.Scenes
         }
         void UpdateMix()
         {
-            if (trackA != null) trackA.volume = postmanAudio ? postmanMusicVolume : .17f;
-            if (trackB != null) trackB.volume = response * (postmanAudio ? postmanMusicVolume : .17f);
-            if (trackC != null) trackC.volume = noise * (postmanAudio ? postmanNoiseVolume : .08f);
+            if (trackA != null) trackA.volume = UsesGameplayMusic?(postmanAudio ? postmanMusicVolume : .17f):0;
+            if (trackB != null) trackB.volume = UsesGameplayMusic?response * (postmanAudio ? postmanMusicVolume : .17f):0;
+            if (trackC != null) trackC.volume = UsesGameplayMusic?noise * (postmanAudio ? postmanNoiseVolume : .08f):0;
             if (responseFill != null) responseFill.fillAmount = response;
             Set(mixLabel, "A Melody\nB Reply " + (response * 100).ToString("0") + "%\nC Noise " + (noise * 100).ToString("0") + "%");
         }
         AudioSource[] Sources() => new[] { trackA, trackB, trackC };
-        void PlayAudio() { double start = AudioSettings.dspTime + .1; foreach (var source in Sources()) if (source != null) { source.Stop(); source.PlayScheduled(start); } }
+        void PlayAudio() { double start = AudioSettings.dspTime + .1; foreach (var source in Sources()) if (source != null) { source.Stop(); if(UsesGameplayMusic)source.PlayScheduled(start); } }
         void OnApplicationFocus(bool focus) { if (!focus && screen != Screen.Menu && screen != Screen.Ending) Pause(); }
         void OnDisable() { foreach (var source in Sources()) if (source != null) source.Stop(); }
         static void Set(Text label, string text) { if (label != null) label.text = text; }
@@ -252,6 +263,10 @@ namespace ReTune.Scenes
         }
     }
 }
+
+
+
+
 
 
 

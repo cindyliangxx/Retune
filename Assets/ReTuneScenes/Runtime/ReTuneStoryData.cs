@@ -31,9 +31,12 @@ namespace ReTune.Scenes
         public static bool active;
         public static int customer, structure = -1, tone = -1, hits;
         public static float response, stability;
-        public static bool taughtClick, taughtHold;
+        public static bool taughtClick, taughtHold, taughtParts;
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        public static void Reset() { active = false; customer = hits = 0; structure = tone = -1; response = stability = 0; taughtClick = taughtHold = false; }
+        public static void Reset() { active = false; customer = hits = 0; structure = tone = -1; response = stability = 0; taughtClick = taughtHold = taughtParts = false; }
         public static void Begin(int index) { active = true; customer = index; structure = tone = -1; hits = 0; response = stability = 0; }
     }
 }
+
+
+
