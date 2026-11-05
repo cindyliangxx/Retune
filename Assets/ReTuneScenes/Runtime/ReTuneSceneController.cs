@@ -36,11 +36,13 @@ namespace ReTune.Scenes
         float time, balance, stableTime, offTime, holdTime, response, noise = 1, noiseTarget = 1, transitionTime;
         bool holding, transitioning, frozen, audioPaused, loading;
         bool resonating;
+        bool narrativeMusic;
+        public bool StoryTransitionLocked { get; set; }
         bool UsesGameplayMusic => screen==Screen.Parts||screen==Screen.Performance;
         string[] historyPages;int historyPage;
         ReTuneStoryData.Customer Customer => story.customers[Mathf.Clamp(ReTuneSession.customer, 0, story.customers.Length - 1)];
-        public bool PartsAnimationPaused => frozen || loading;
-        public bool CanInteract => !frozen && !transitioning && !loading;
+        public bool PartsAnimationPaused => frozen || loading || StoryTransitionLocked;
+        public bool CanInteract => !frozen && !transitioning && !loading && !StoryTransitionLocked;
         bool IsHold => Customer.mostlyHold ? note % 3 != 0 : ReTuneSession.customer == 0 ? note == 3 || note == 7 : note % 2 == 1;
         float Due => firstNoteTime + note * noteSpacing;
         public float Stability => time > 0 ? stableTime / time : 1;
@@ -57,14 +59,14 @@ namespace ReTune.Scenes
             var narrative=GetComponent<ReTuneNarrativePlayer>();
             if(narrative!=null){narrative.Begin(this);UpdateMix();return;}
             if (screen == Screen.Shop) RefreshDialogue();
-            else if (screen == Screen.Parts) { RefreshSlots(); PlayAudio(); if(ReTuneSession.customer==0&&!ReTuneSession.taughtParts){ReTuneSession.taughtParts=true;ShowOverlay("Inside the Music Box","Review the visitor conversation and listen to the original melody. Drag one rhythm part and one tone part into their slots. Double-click a part for details. Wind the key to test your choice.");} }
+            else if (screen == Screen.Parts) { RefreshSlots(); StopPartsAudio(); if(ReTuneSession.customer==0&&!ReTuneSession.taughtParts){ReTuneSession.taughtParts=true;ShowOverlay("Inside the Music Box","Review the conversation and listen to the original melody. Fit one rhythm part and one tone part. Double-click a part to read its effect. Wind the key to test your choice.");} }
             else if (screen == Screen.Performance) ResetPerformance();
             else if (screen == Screen.Reply) { Set(body, Customer.reply); Set(actionLabel, ReTuneSession.customer < story.customers.Length - 1 ? "Next Day" : "Epilogue"); response = ReTuneSession.response; noise = noiseTarget = 0; PlayAudio(); }
             UpdateMix();
         }
         void Update()
         {
-            if (Input.GetKeyDown(KeyCode.Escape)) { if (frozen) CloseOverlay(); else Pause(); }
+            if (!StoryTransitionLocked && Input.GetKeyDown(KeyCode.Escape)) { if (frozen) CloseOverlay(); else Pause(); }
             if (audioPaused != frozen)
             {
                 foreach (var source in Sources()) if (source != null) { if (frozen) source.Pause(); else source.UnPause(); }
@@ -74,7 +76,7 @@ namespace ReTune.Scenes
             float dt = Mathf.Min(Time.unscaledDeltaTime, .05f);
             noise = Mathf.MoveTowards(noise, noiseTarget, dt * .8f);
             if (screen == Screen.Parts && transitioning)
-            { transitionTime += dt; if (transitionTime >= 1.9f) Load(Screen.Performance); }
+            { transitionTime += dt; var art=GetComponent<ReTunePartsArt>(); if (transitionTime >= (art!=null?art.playbackDuration+.15f:1.9f)) Load(Screen.Performance); }
             if (screen == Screen.Performance) TickPerformance(dt);
             UpdateMix();
         }
@@ -93,7 +95,7 @@ namespace ReTune.Scenes
             else if (screen == Screen.Reply)
             { if (ReTuneSession.customer < story.customers.Length - 1) { ReTuneSession.Begin(ReTuneSession.customer + 1); Load(Screen.Shop); } else Load(Screen.Ending); }
         }
-        public void NarrativeAudio(bool healed){response=healed?1:0;noise=noiseTarget=healed?0:1;PlayAudio();}
+        public void NarrativeAudio(bool healed){narrativeMusic=true;response=healed?1:0;noise=noiseTarget=healed?0:1;UpdateMix();PlayAudio();}
         void RefreshDialogue() { Set(body, Customer.dialogue[line]); Set(actionLabel, line < Customer.dialogue.Length - 1 ? "Next" : "Touch Music Box"); }
         public void TouchMusicBox()
         {
@@ -106,21 +108,23 @@ namespace ReTune.Scenes
             if(!CanInteract)return;historyPages=Customer.dialogue;historyPage=0;
             ShowOverlay("Review / "+Customer.name,historyPages[historyPage]);
         }
-        public void Pause() { historyPages=null; ShowOverlay("Paused", "Select Continue to resume."); }
+        public void Pause() { if(loading||StoryTransitionLocked)return;historyPages=null; ShowOverlay("Paused", "Select Continue to resume."); }
         void ShowOverlay(string title, string text)
-        { if (holding) ResolveNote(false); frozen = true; Set(overlayTitle, title); Set(overlayBody, text); if (overlay != null) overlay.SetActive(true); }
-        public void CloseOverlay() { if(historyPages!=null && !Input.GetKeyDown(KeyCode.Escape) && ++historyPage<historyPages.Length){Set(overlayBody,historyPages[historyPage]);return;} historyPages=null;frozen = false; if (overlay != null) overlay.SetActive(false); }
-        public void MainMenu() { if (loading) return; ReTuneSession.Reset(); Load(Screen.Menu); }
+        { if (holding) ResolveNote(false); frozen = true; Set(overlayTitle, title); Set(overlayBody, ReTuneUITheme.SentenceLines(text)); if (overlay != null){overlay.transform.SetAsLastSibling();overlay.SetActive(true);}var theme=GetComponent<ReTuneUITheme>();if(theme!=null)theme.RevealOverlay(); }
+        public void CloseOverlay() { if(historyPages!=null && !Input.GetKeyDown(KeyCode.Escape) && ++historyPage<historyPages.Length){Set(overlayBody,ReTuneUITheme.SentenceLines(historyPages[historyPage]));return;} historyPages=null;frozen = false; if (overlay != null) overlay.SetActive(false); }
+        public void MainMenu() { if (loading||StoryTransitionLocked) return; ReTuneSession.Reset(); Load(Screen.Menu); }
         public void RestartPhase()
         {
-            if (loading) return;
-            CloseOverlay(); transitioning = false;
+            if (loading||StoryTransitionLocked) return;
+            historyPages=null;frozen=false;if(overlay!=null)overlay.SetActive(false);transitioning = false;
             if (screen == Screen.Performance) ResetPerformance();
             else if (screen == Screen.Parts) ClearParts();
             else { ReTuneSession.Begin(ReTuneSession.customer); Load(Screen.Shop); }
         }
         public void OriginalMelody()
-        { if (!CanInteract || screen != Screen.Parts) return; noiseTarget = 1; Set(hint, "Playing the original melody."); PlayAudio(); }
+        { if (!CanInteract || screen != Screen.Parts) return; var art=GetComponent<ReTunePartsArt>();if(art!=null&&!art.BeginPreview())return;response=0;noise=noiseTarget=1;Set(hint, "Playing the original melody."); UpdateMix();PlayAudio(); }
+        public void StopPartsAudio(){if(screen!=Screen.Parts)return;foreach(var source in Sources())if(source!=null)source.Stop();}
+        void CancelPartsPreview(){var art=GetComponent<ReTunePartsArt>();if(art!=null)art.CancelPlayback();else StopPartsAudio();response=0;noise=noiseTarget=1;}
         public void ClearStructure() { if (CanInteract) { ReTuneSession.structure = -1; RefreshSlots(); RestoreEmptyNoise(); } }
         public void ClearTone() { if (CanInteract) { ReTuneSession.tone = -1; RefreshSlots(); RestoreEmptyNoise(); } }
         public void ClearParts() { if (!CanInteract) return; ReTuneSession.structure = ReTuneSession.tone = -1; noiseTarget = 1; RefreshSlots(); Set(hint, "Slots cleared."); }
@@ -134,18 +138,21 @@ namespace ReTune.Scenes
             Physics2D.SyncTransforms();
             bool intoStructure = structureSlot.OverlapPoint(point);
             bool intoTone = toneSlot.OverlapPoint(point);
-            if (!intoStructure && !intoTone) { Set(hint, "Drop a part into a slot."); return; }
-            if (story.parts[index].structure != intoStructure) { Set(hint, "Wrong slot type."); return; }
+            bool fits=story.parts[index].structure?intoStructure:intoTone;
+            if (!intoStructure && !intoTone) { RemovePart(index);Set(hint, "Drop a part into a slot."); return; }
+            if (!fits) { Set(hint, "Wrong slot type."); return; }
             InstallPart(index); Set(hint, "Part fitted. Wind the key to listen.");
         }
         public void InstallPart(int index)
         {
-            if (index < 0 || index >= story.parts.Length) return;
+            if (!CanInteract || screen!=Screen.Parts || index < 0 || index >= story.parts.Length) return;
+            CancelPartsPreview();
             if (story.parts[index].structure) ReTuneSession.structure = index; else ReTuneSession.tone = index;
             RefreshSlots();
         }
         void RefreshSlots()
         {
+            if(screen==Screen.Parts)CancelPartsPreview();
             Set(structureLabel, "1. Rhythm Slot\n" + (ReTuneSession.structure < 0 ? "Drop a rhythm part here" : story.parts[ReTuneSession.structure].name + " (click to remove)"));
             Set(toneLabel, "2. Tone Slot\n" + (ReTuneSession.tone < 0 ? "Drop a tone part here" : story.parts[ReTuneSession.tone].name + " (click to remove)"));
             if (structureLabel != null) structureLabel.gameObject.SetActive(ReTuneSession.structure < 0);
@@ -155,6 +162,7 @@ namespace ReTune.Scenes
                 if (part == null) continue;
                 part.PlaceInSlot(part.part == ReTuneSession.structure ? structureSlot : part.part == ReTuneSession.tone ? toneSlot : null);
             }
+            var art=GetComponent<ReTunePartsArt>();if(art!=null)art.RefreshInstalledParts();
         }
         public void RemovePart(int index)
         {
@@ -166,10 +174,13 @@ namespace ReTune.Scenes
         public void Trial()
         {
             if (!CanInteract || screen != Screen.Parts) return;
+            var art=GetComponent<ReTunePartsArt>();if(art!=null&&!art.BeginPreview())return;
             int correct = RecipeMatches();
+            response=correct*.5f;
             if (correct == 2) { noiseTarget = 0; transitioning = true; transitionTime = 0; Set(hint, "Good match. Get ready to play."); }
             else if (correct == 1) { noiseTarget = .5f; Set(hint, "A little calmer. Try another part."); }
             else { noiseTarget = ReTuneSession.structure < 0 && ReTuneSession.tone < 0 ? 1 : 1.5f; Set(hint, "Try a different pair."); }
+            noise=noiseTarget;UpdateMix();PlayAudio();
         }
         public void ResetPerformance()
         {
@@ -233,7 +244,8 @@ namespace ReTune.Scenes
         }
         void ConfigurePostmanAudio()
         {
-            if (!UsesGameplayMusic){foreach(var source in Sources())if(source!=null){source.Stop();source.playOnAwake=false;}return;}
+            foreach(var source in Sources())if(source!=null){source.Stop();source.playOnAwake=false;}
+            if(screen==Screen.Menu||screen==Screen.Ending)return;
             if (!usePostmanExperiment || ReTuneSession.customer != 0) return;
             var clips=new[] { Resources.Load<AudioClip>("Audio/PostmanExperiment/PostmanA"),Resources.Load<AudioClip>("Audio/PostmanExperiment/PostmanB"),Resources.Load<AudioClip>("Audio/PostmanExperiment/PostmanC") };
             var sources=Sources();
@@ -243,14 +255,14 @@ namespace ReTune.Scenes
         }
         void UpdateMix()
         {
-            if (trackA != null) trackA.volume = UsesGameplayMusic?(postmanAudio ? postmanMusicVolume : .17f):0;
-            if (trackB != null) trackB.volume = UsesGameplayMusic?response * (postmanAudio ? postmanMusicVolume : .17f):0;
-            if (trackC != null) trackC.volume = UsesGameplayMusic?noise * (postmanAudio ? postmanNoiseVolume : .08f):0;
+            if (trackA != null) trackA.volume = UsesGameplayMusic||narrativeMusic?(postmanAudio ? postmanMusicVolume : .17f):0;
+            if (trackB != null) trackB.volume = UsesGameplayMusic||narrativeMusic?response * (postmanAudio ? postmanMusicVolume : .17f):0;
+            if (trackC != null) trackC.volume = UsesGameplayMusic||narrativeMusic?noise * (postmanAudio ? postmanNoiseVolume : .08f):0;
             if (responseFill != null) responseFill.fillAmount = response;
             Set(mixLabel, "A Melody\nB Reply " + (response * 100).ToString("0") + "%\nC Noise " + (noise * 100).ToString("0") + "%");
         }
         AudioSource[] Sources() => new[] { trackA, trackB, trackC };
-        void PlayAudio() { double start = AudioSettings.dspTime + .1; foreach (var source in Sources()) if (source != null) { source.Stop(); if(UsesGameplayMusic)source.PlayScheduled(start); } }
+        void PlayAudio() { double start = AudioSettings.dspTime + .1; foreach (var source in Sources()) if (source != null) { source.Stop(); if(UsesGameplayMusic||narrativeMusic)source.PlayScheduled(start); } }
         void OnApplicationFocus(bool focus) { if (!focus && screen != Screen.Menu && screen != Screen.Ending) Pause(); }
         void OnDisable() { foreach (var source in Sources()) if (source != null) source.Stop(); }
         static void Set(Text label, string text) { if (label != null) label.text = text; }

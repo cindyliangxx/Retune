@@ -82,7 +82,7 @@ namespace ReTune.Scenes
             var canvas=root.GetComponent<Canvas>();canvas.renderMode=RenderMode.ScreenSpaceOverlay;canvas.sortingOrder=300;
             var scaler=root.GetComponent<CanvasScaler>();scaler.uiScaleMode=CanvasScaler.ScaleMode.ScaleWithScreenSize;scaler.referenceResolution=new Vector2(1280,720);scaler.matchWidthOrHeight=.5f;
             volumePanel=Rect("BGM Volume",root.transform,new Vector2(300,58));volumePanel.anchorMin=volumePanel.anchorMax=volumePanel.pivot=Vector2.one;volumePanel.anchoredPosition=new Vector2(-18,-16);
-            var background=volumePanel.gameObject.AddComponent<Image>();background.color=new Color(.24f,.17f,.10f,.72f);volumePanel.gameObject.AddComponent<ReTuneSubtitleGradient>();
+            var background=volumePanel.gameObject.AddComponent<Image>();background.color=ReTuneUITheme.Surface;volumePanel.gameObject.AddComponent<ReTuneSubtitleGradient>();
             Label("BGM",volumePanel,new Vector2(44,0),new Vector2(64,44));
             volumeValue=Label(Mathf.RoundToInt(volume*100)+"%",volumePanel,new Vector2(266,0),new Vector2(62,44));
             var sliderRect=Rect("BGM Slider",volumePanel,new Vector2(154,36));sliderRect.anchorMin=sliderRect.anchorMax=new Vector2(0,.5f);sliderRect.anchoredPosition=new Vector2(156,0);

@@ -13,10 +13,14 @@ namespace ReTune.Scenes
         Canvas[] labels;
         int[] spriteOrders, labelOrders;
         bool dragging;
+        public bool IsDragging => dragging;
+        Vector3 homeScale;
+        Quaternion homeRotation;
         float removeAt = -1;
         void Awake()
         {
             home = transform.localPosition;
+            homeScale=transform.localScale;homeRotation=transform.localRotation;
             hitbox = GetComponentInChildren<Collider2D>();
             visuals = GetComponentsInChildren<SpriteRenderer>(true);
             labels = GetComponentsInChildren<Canvas>(true);
@@ -29,7 +33,10 @@ namespace ReTune.Scenes
         {
             removeAt = -1;
             if (dragging) CancelDrag();
-            if (slot == null) { transform.localPosition = home; return; }
+            if (slot == null) { transform.localPosition = home; transform.localScale=homeScale;transform.localRotation=homeRotation;return; }
+            transform.localScale=homeScale;transform.localRotation=homeRotation;
+            var art=controller.GetComponent<ReTunePartsArt>();
+            if(art!=null)art.FitInstalledPart(this,slot);
             Vector3 center = slot.transform.TransformPoint(slot.offset);
             Vector3 ownOffset = hitbox.transform.TransformPoint(hitbox.offset) - transform.position;
             transform.position = new Vector3(center.x - ownOffset.x, center.y - ownOffset.y, transform.position.z);
@@ -38,6 +45,7 @@ namespace ReTune.Scenes
         {
             if (!controller.CanInteract || e.button != PointerEventData.InputButton.Left) return;
             if (!ReTuneWorldPointer.TryPosition(e.pressEventCamera, e.position, transform.position.z, out var pointer)) return;
+            var art=controller.GetComponent<ReTunePartsArt>();if(art!=null)art.CancelPlayback();
             removeAt = -1; dragging = true; beforeDrag = transform.localPosition; pointerOffset = transform.position - pointer;
             hitbox.enabled = false;
             for (int i = 0; i < visuals.Length; i++) visuals[i].sortingOrder = spriteOrders[i] + 1000;

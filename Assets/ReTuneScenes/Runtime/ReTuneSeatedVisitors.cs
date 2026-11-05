@@ -18,6 +18,15 @@ namespace ReTune.Scenes
         public void AlignForeground()
         {
             if(deskForeground==null||clippingFrame==null)return;
+            var flow=GetComponent<ReTuneNarrativePlayer>();
+            if(flow!=null&&flow.visitorPortraits!=null)
+            {
+                var portraits=flow.visitorPortraits.transform;
+                if(roomBackground!=null&&roomBackground.transform.GetSiblingIndex()>portraits.GetSiblingIndex())
+                    roomBackground.transform.SetSiblingIndex(portraits.GetSiblingIndex());
+                if(clippingFrame.GetSiblingIndex()<portraits.GetSiblingIndex())
+                    clippingFrame.SetSiblingIndex(portraits.GetSiblingIndex()+1);
+            }
             var rect=deskForeground.rectTransform;var parent=(RectTransform)clippingFrame.parent;var canvas=rect.GetComponentInParent<Canvas>();
             var camera=canvas.renderMode==RenderMode.ScreenSpaceOverlay?null:canvas.worldCamera;
             Vector2 center=Vector2.zero,size;

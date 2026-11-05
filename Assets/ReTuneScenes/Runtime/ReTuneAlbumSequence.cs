@@ -8,43 +8,33 @@ namespace ReTune.Scenes
         [Header("相册独立图层（同画布原位置）")]
         public Sprite[] photoLayers;
         public Sprite[] photoCloseups;
-        public Sprite closedAlbumCover;
-        [Min(.1f)] public float flipDuration=.55f;
+        [Header("Photo closeup signature")]
+        public Texture2D signatureFinalFrame;
+        public Texture2D[] signatureFrames;
+        [Min(.1f)] public float signatureDuration=1.5f;
+        [Range(.1f,.6f)] public float signatureWidth=.4f;
+        ReTunePhotoSignature signature;
         public bool IsOpen { get { return root!=null&&root.activeSelf; } }
         public bool BlocksDialogueInput { get { return IsOpen||Time.frameCount==resumeFrame; } }
         public bool IsViewingPhoto { get { return zoom!=null&&zoom.activeSelf; } }
-        GameObject root,closed,spread,zoom;
-        RectTransform coverRect,spreadRect,photoRect,photoViewport;
-        CanvasGroup coverFade,spreadFade;
+        GameObject root,spread,zoom;
+        RectTransform spreadRect,photoRect,photoViewport;
         ReTuneNarrativePlayer player;
-        bool portraitWasActive,panelWasActive,flipping;
-        float flipAge;
+        bool portraitWasActive,panelWasActive;
         int resumeFrame=-1;
         Font font;
+        bool CanOperate => player!=null&&(player.controller==null||player.controller.CanInteract);
         public void Open(ReTuneNarrativePlayer owner)
         {
             player=owner;if(root==null)Build();
             panelWasActive=player.panel.activeSelf;portraitWasActive=player.visitorPortraits!=null&&player.visitorPortraits.activeSelf;
             player.panel.SetActive(false);if(player.visitorPortraits!=null)player.visitorPortraits.SetActive(false);
-            root.SetActive(true);root.transform.SetAsLastSibling();closed.SetActive(true);spread.SetActive(false);zoom.SetActive(false);
-            flipping=false;coverFade.alpha=1;coverRect.localScale=Vector3.one;spreadRect.localScale=Vector3.one;
-        }
-        public void OpenAlbum()
-        {
-            if(!IsOpen||flipping||!closed.activeSelf)return;
-            flipping=true;flipAge=0;spread.SetActive(true);spreadFade.alpha=0;
-        }
-        void Update()
-        {
-            if(!flipping||player.controller!=null&&player.controller.PartsAnimationPaused)return;
-            flipAge+=Time.unscaledDeltaTime;float t=Mathf.Clamp01(flipAge/Mathf.Max(.1f,flipDuration));float eased=t*t*(3-2*t);
-            coverRect.localScale=new Vector3(Mathf.Max(.02f,1-eased),1,1);coverFade.alpha=1-eased;
-            spreadRect.localScale=new Vector3(Mathf.Lerp(.65f,1,eased),1,1);spreadFade.alpha=eased;
-            if(t>=1){flipping=false;closed.SetActive(false);spreadRect.localScale=Vector3.one;}
+            root.SetActive(true);root.transform.SetAsLastSibling();spread.SetActive(true);zoom.SetActive(false);
+            spreadRect.localScale=Vector3.one;
         }
         public void ViewPhoto(int index)
         {
-            if(!IsOpen||flipping||closed.activeSelf||index<0||index>1)return;
+            if(!CanOperate||!IsOpen||index<0||index>1)return;
             zoom.SetActive(true);Canvas.ForceUpdateCanvases();
             if(photoCloseups!=null&&index<photoCloseups.Length&&photoCloseups[index]!=null)
             {
@@ -52,6 +42,7 @@ namespace ReTune.Scenes
                 float photoRatio=image.sprite.rect.width/image.sprite.rect.height;
                 float photoWidth=Mathf.Min(photoViewport.rect.width-32,(photoViewport.rect.height-32)*photoRatio);
                 photoRect.sizeDelta=new Vector2(photoWidth,photoWidth/photoRatio);photoRect.anchoredPosition=Vector2.zero;
+                PlaySignature();
                 return;
             }
             float ratio=albumSpread.rect.width/albumSpread.rect.height;
@@ -60,11 +51,37 @@ namespace ReTune.Scenes
             var size=new Vector2(width,width/ratio)*magnification;
             var focus=index==0?new Vector2(.25f,.41f):new Vector2(.724f,.532f);
             photoRect.sizeDelta=size;photoRect.anchoredPosition=Vector2.Scale(Vector2.one*.5f-focus,size);
+            PlaySignature();
         }
-        public void BackToAlbum(){if(zoom!=null)zoom.SetActive(false);}
+        void PlaySignature()
+        {
+            if(signatureFinalFrame==null||signatureFrames==null||signatureFrames.Length==0)return;
+            // Clip against the photo's alpha silhouette, including its tilted frame edges.
+            var photoMask=photoRect.GetComponent<Mask>();
+            if(photoMask==null)photoMask=photoRect.gameObject.AddComponent<Mask>();
+            photoMask.showMaskGraphic=true;
+            if(signature==null)
+            {
+                var rect=Rect("Michael / handwritten signature",photoRect,Vector2.zero);
+                rect.gameObject.AddComponent<RawImage>().raycastTarget=false;
+                signature=rect.gameObject.AddComponent<ReTunePhotoSignature>();
+                var shadow=rect.gameObject.AddComponent<Shadow>();shadow.effectColor=new Color(0,0,0,.35f);shadow.effectDistance=new Vector2(1,-1);
+            }
+            var target=(RectTransform)signature.transform;
+            target.anchorMin=target.anchorMax=target.pivot=new Vector2(1,0);
+            signature.Replay(signatureFinalFrame,signatureFrames,player.controller);
+            float insetX=Mathf.Max(16,photoRect.rect.width*.08f);
+            float insetY=Mathf.Max(16,photoRect.rect.height*.08f);
+            float width=Mathf.Max(0,Mathf.Min(photoRect.rect.width*signatureWidth,
+                photoRect.rect.width-insetX*2,(photoRect.rect.height-insetY*2)*signature.Aspect));
+            target.sizeDelta=new Vector2(width,width/signature.Aspect);
+            target.anchoredPosition=new Vector2(-insetX,insetY);
+            target.SetAsLastSibling();signature.duration=signatureDuration;
+        }
+        public void BackToAlbum(){if(CanOperate&&zoom!=null)zoom.SetActive(false);}
         public void ContinueDialogue()
         {
-            if(!IsOpen||flipping)return;
+            if(!CanOperate||!IsOpen)return;
             root.SetActive(false);player.panel.SetActive(panelWasActive);
             if(player.visitorPortraits!=null)player.visitorPortraits.SetActive(portraitWasActive);
             player.Next();
@@ -75,18 +92,9 @@ namespace ReTune.Scenes
             font=player.body.font;
             var parent=player.panel.GetComponentInParent<Canvas>().transform;
             var rootRect=Rect("Interactive Album",parent,Vector2.zero);Stretch(rootRect);root=rootRect.gameObject;
-            var dim=root.AddComponent<Image>();dim.color=new Color(.12f,.09f,.07f,.68f);dim.raycastTarget=true;
-            closed=Rect("Closed Album",rootRect,new Vector2(340,430)).gameObject;
-            coverRect=(RectTransform)closed.transform;coverRect.anchoredPosition=new Vector2(0,-20);
-            var cover=closed.AddComponent<Image>();cover.color=new Color(.32f,.27f,.30f);coverFade=closed.AddComponent<CanvasGroup>();
-            if(closedAlbumCover!=null){cover.sprite=closedAlbumCover;cover.color=Color.white;cover.preserveAspect=true;}
-            var open=closed.AddComponent<Button>();open.targetGraphic=cover;open.onClick.AddListener(OpenAlbum);
-            // A replaceable plain cover until a closed-book illustration is supplied.
-            if(closedAlbumCover==null)Label("Memories",coverRect,48,new Vector2(0,35),new Vector2(290,80));
-            Label("Click to open",coverRect,26,new Vector2(0,-120),new Vector2(290,50));
-            var spine=Rect("Spine",coverRect,new Vector2(12,410));spine.anchoredPosition=new Vector2(-150,0);spine.gameObject.AddComponent<Image>().color=new Color(.65f,.53f,.43f);
+            var dim=root.AddComponent<Image>();dim.color=ReTuneUITheme.Veil;dim.raycastTarget=true;
             spreadRect=Rect("Open Album",rootRect,new Vector2(1080,610));spread=spreadRect.gameObject;
-            var art=spread.AddComponent<Image>();art.sprite=albumSpread;art.preserveAspect=true;art.raycastTarget=false;spreadFade=spread.AddComponent<CanvasGroup>();
+            var art=spread.AddComponent<Image>();art.sprite=albumSpread;art.preserveAspect=true;art.raycastTarget=false;
             // Hotspots are attached to an image-sized frame, not its surrounding margins.
             float ratio=albumSpread.rect.width/albumSpread.rect.height;spreadRect.sizeDelta=new Vector2(1080,1080/ratio);
             if(photoLayers!=null&&photoLayers.Length==2&&photoLayers[0]!=null&&photoLayers[1]!=null)
@@ -125,7 +133,7 @@ namespace ReTune.Scenes
         }
         Button TextButton(string text,Transform parent,Vector2 position,Vector2 size,UnityEngine.Events.UnityAction action)
         {
-            var rect=Rect(text,parent,size);rect.anchoredPosition=position;var image=rect.gameObject.AddComponent<Image>();image.color=new Color(.27f,.21f,.16f,.9f);var button=rect.gameObject.AddComponent<Button>();button.targetGraphic=image;button.onClick.AddListener(action);Label(text,rect,30,Vector2.zero,size);return button;
+            var rect=Rect(text,parent,size);rect.anchoredPosition=position;var image=rect.gameObject.AddComponent<Image>();image.color=Color.clear;var button=rect.gameObject.AddComponent<Button>();button.targetGraphic=image;button.onClick.AddListener(action);Label(text,rect,30,Vector2.zero,size);ReTuneUITheme.StyleButton(button);return button;
         }
         static void Hotspot(string name,Transform parent,Vector2 min,Vector2 max,UnityEngine.Events.UnityAction action)
         {

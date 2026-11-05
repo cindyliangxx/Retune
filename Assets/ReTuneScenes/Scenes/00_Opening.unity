@@ -2896,6 +2896,9 @@ MonoBehaviour:
   backButton: {fileID: 1036160790}
   openingArtwork: {fileID: 0}
   visitorPortraits: {fileID: 0}
+  menuExitDuration: 0.55
+  backgroundBlendDuration: 0.35
+  visitorEntranceDuration: 0.65
 --- !u!4 &2071681304
 Transform:
   m_ObjectHideFlags: 0
