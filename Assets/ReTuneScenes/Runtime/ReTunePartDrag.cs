@@ -8,6 +8,7 @@ namespace ReTune.Scenes
         public ReTuneSceneController controller;
         public int part;
         Vector3 home, beforeDrag, pointerOffset;
+        public Vector3 OriginalScale { get; private set; } // 新增
         Collider2D hitbox;
         SpriteRenderer[] visuals;
         Canvas[] labels;
@@ -17,9 +18,19 @@ namespace ReTune.Scenes
         Vector3 homeScale;
         Quaternion homeRotation;
         float removeAt = -1;
+        Transform rollerVisual;
+        Vector3 rollerHomeScale, rollerHomePosition;
+        GearRotator gearDriver;
+        Transform defaultStateNode;
+        Vector3 defaultStateHomeScale;
+        static readonly Vector3 InstalledRollerScale = new Vector3(0.6676062f, 0.6676062f, 1f);
+        static readonly Vector3 InstalledRollerPosition = new Vector3(0f, 0f, -0.1f);
+        static readonly Vector3 SlotPosition = new Vector3(-0.327f, 0.327f, 0f);
+        static readonly Vector3 SlotDefaultStateScale = new Vector3(0.75f, 0.75f, 1f);
         void Awake()
         {
             home = transform.localPosition;
+            OriginalScale = transform.localScale;
             homeScale=transform.localScale;homeRotation=transform.localRotation;
             hitbox = GetComponentInChildren<Collider2D>();
             visuals = GetComponentsInChildren<SpriteRenderer>(true);
@@ -27,19 +38,73 @@ namespace ReTune.Scenes
             spriteOrders = new int[visuals.Length]; labelOrders = new int[labels.Length];
             for (int i = 0; i < visuals.Length; i++) spriteOrders[i] = visuals[i].sortingOrder;
             for (int i = 0; i < labels.Length; i++) labelOrders[i] = labels[i].sortingOrder;
+            var box = GetComponentInChildren<MusicBoxController>(true);
+            if (box != null)
+            {
+                rollerVisual = box.transform;
+                rollerHomeScale = rollerVisual.localScale;
+                rollerHomePosition = rollerVisual.localPosition;
+            }
+            else
+            {
+                // 结构零件：GearRotator 已配置在根节点上（场景里 isSpinning=false，由脚本 SetSpinState 控制）
+                gearDriver = GetComponent<GearRotator>();
+                // 找默认状态节点（根的直接子节点上的 SpriteRenderer），卡槽缩放用
+                foreach (var sr in GetComponentsInChildren<SpriteRenderer>(true))
+                {
+                    if (sr.transform.parent == transform && sr.sprite != null)
+                    {
+                        defaultStateNode = sr.transform;
+                        defaultStateHomeScale = defaultStateNode.localScale;
+                        break;
+                    }
+                }
+            }
         }
         public void SetHome() { home = transform.localPosition; visuals = GetComponentsInChildren<SpriteRenderer>(true); spriteOrders = new int[visuals.Length]; for (int i = 0; i < visuals.Length; i++) spriteOrders[i] = visuals[i].sortingOrder; }
         public void PlaceInSlot(Collider2D slot)
         {
             removeAt = -1;
             if (dragging) CancelDrag();
-            if (slot == null) { transform.localPosition = home; transform.localScale=homeScale;transform.localRotation=homeRotation;return; }
+            if (slot == null) { transform.localPosition = home; transform.localScale=homeScale;transform.localRotation=homeRotation; ApplyRollerSlotTransform(null); RestoreDefaultState(); return; }
             transform.localScale=homeScale;transform.localRotation=homeRotation;
-            var art=controller.GetComponent<ReTunePartsArt>();
-            if(art!=null)art.FitInstalledPart(this,slot);
-            Vector3 center = slot.transform.TransformPoint(slot.offset);
-            Vector3 ownOffset = hitbox.transform.TransformPoint(hitbox.offset) - transform.position;
-            transform.position = new Vector3(center.x - ownOffset.x, center.y - ownOffset.y, transform.position.z);
+            if (slot == controller.structureSlot)
+            {
+                // 结构零件：吸附到固定点，缩放默认状态节点（不缩放根节点）
+                transform.localPosition = SlotPosition;
+                if (defaultStateNode != null) defaultStateNode.localScale = SlotDefaultStateScale;
+            }
+            else
+            {
+                var art=controller.GetComponent<ReTunePartsArt>();
+                if(art!=null)art.FitInstalledPart(this,slot);
+                ApplyRollerSlotTransform(slot);
+                Vector3 center = slot.transform.TransformPoint(slot.offset);
+                Vector3 ownOffset = hitbox.transform.TransformPoint(hitbox.offset) - transform.position;
+                transform.position = new Vector3(center.x - ownOffset.x, center.y - ownOffset.y, transform.position.z);
+            }
+        }
+        void RestoreDefaultState()
+        {
+            if (defaultStateNode != null) defaultStateNode.localScale = defaultStateHomeScale;
+        }
+        void ApplyRollerSlotTransform(Collider2D slot)
+        {
+            if (rollerVisual == null) return;
+            if (slot == controller.toneSlot)
+            {
+                rollerVisual.localScale = InstalledRollerScale;
+                rollerVisual.localPosition = InstalledRollerPosition;
+            }
+            else
+            {
+                rollerVisual.localScale = rollerHomeScale;
+                rollerVisual.localPosition = rollerHomePosition;
+            }
+        }
+        public void SetGearSpinning(bool spinning)
+        {
+            if (gearDriver != null) gearDriver.SetSpinState(spinning);
         }
         public void OnBeginDrag(PointerEventData e)
         {

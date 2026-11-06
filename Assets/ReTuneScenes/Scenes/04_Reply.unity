@@ -1070,7 +1070,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 1592, y: 720}
+  m_SizeDelta: {x: 1592.4917, y: 720.2224}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &224137721
 MonoBehaviour:
@@ -2593,7 +2593,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0}
   m_AnchorMax: {x: 0.5, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 1592, y: 720}
+  m_SizeDelta: {x: 1592.4917, y: 720.2224}
   m_Pivot: {x: 0.5, y: 0}
 --- !u!114 &821279863
 MonoBehaviour:
@@ -2997,7 +2997,7 @@ Camera:
   far clip plane: 1000
   field of view: 60
   orthographic: 1
-  orthographic size: 3.5999997
+  orthographic size: 3.600445
   m_Depth: 0
   m_CullingMask:
     serializedVersion: 2
@@ -3022,7 +3022,7 @@ Transform:
   m_GameObject: {fileID: 953785425}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.0000005086263, y: 0.00000028610228, z: -10}
+  m_LocalPosition: {x: -0.000790129, y: -0.00044499044, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -3373,7 +3373,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0}
   m_AnchorMax: {x: 0.5, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 1592, y: 720}
+  m_SizeDelta: {x: 1592.4917, y: 720.2224}
   m_Pivot: {x: 0.5, y: 0}
 --- !u!114 &1090664073
 MonoBehaviour:
@@ -3451,7 +3451,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 1592, y: 720}
+  m_SizeDelta: {x: 1592.4917, y: 720.2224}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1119727063
 MonoBehaviour:
@@ -3560,6 +3560,14 @@ MonoBehaviour:
   trackA: {fileID: 278137837}
   trackB: {fileID: 1376726347}
   trackC: {fileID: 970000125}
+  postmanStems:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  guitaristStems:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
   usePostmanExperiment: 1
   postmanMusicVolume: 0.4
   postmanNoiseVolume: 0.25

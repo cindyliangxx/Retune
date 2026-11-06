@@ -463,7 +463,7 @@ Camera:
   far clip plane: 1000
   field of view: 60
   orthographic: 1
-  orthographic size: 3.5999997
+  orthographic size: 3.600445
   m_Depth: 0
   m_CullingMask:
     serializedVersion: 2
@@ -488,7 +488,7 @@ Transform:
   m_GameObject: {fileID: 143973091}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.0000005086263, y: 0.00000028610228, z: -10}
+  m_LocalPosition: {x: -0.000790129, y: -0.00044499044, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -4005,6 +4005,14 @@ MonoBehaviour:
   trackA: {fileID: 1974961555}
   trackB: {fileID: 659695888}
   trackC: {fileID: 1094079855}
+  postmanStems:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  guitaristStems:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
   usePostmanExperiment: 1
   postmanMusicVolume: 0.4
   postmanNoiseVolume: 0.25

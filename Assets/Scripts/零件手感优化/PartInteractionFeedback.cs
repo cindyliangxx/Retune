@@ -1,7 +1,8 @@
 using UnityEngine;
+using UnityEngine.EventSystems;
 using DG.Tweening;
 
-public class PartInteractionFeedback : MonoBehaviour
+public class PartInteractionFeedback : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerDownHandler, IPointerUpHandler
 {
     [Header("========== 全局设置 ==========")]
     [Tooltip("总开关：是否开启手感优化")]
@@ -70,6 +71,8 @@ public class PartInteractionFeedback : MonoBehaviour
         originalScale = transform.localScale;
         originalRotation = transform.localRotation;
 
+        AutoAssignRenderers();
+
         if (hover_UseSound || drag_UseSound)
         {
             audioSource = GetComponent<AudioSource>();
@@ -90,35 +93,58 @@ public class PartInteractionFeedback : MonoBehaviour
         if (dragRenderer != null) SetAlpha(dragRenderer, 0f);
     }
 
+    // 素材没在 Inspector 拖入时，按「根的直接子节点=默认素材，其子节点=hover/drag 素材」自动补全
+    private void AutoAssignRenderers()
+    {
+        if (defaultRenderer != null && hoverRenderer != null && dragRenderer != null) return;
+
+        Transform gearNode = null;
+        foreach (var sr in GetComponentsInChildren<SpriteRenderer>(true))
+        {
+            if (sr.transform.parent == transform && sr.sprite != null) { gearNode = sr.transform; break; }
+        }
+        if (gearNode == null) return;
+
+        if (defaultRenderer == null) defaultRenderer = gearNode.GetComponent<SpriteRenderer>();
+
+        foreach (var sr in gearNode.GetComponentsInChildren<SpriteRenderer>(true))
+        {
+            if (sr == defaultRenderer) continue;
+            if (hoverRenderer == null) hoverRenderer = sr;
+            else if (dragRenderer == null) dragRenderer = sr;
+            else break;
+        }
+    }
+
     // ==========================================
     // 鼠标事件 (控制拖拽的开始和结束，以及悬浮)
     // ==========================================
     
-    private void OnMouseEnter()
+    public void OnPointerEnter(PointerEventData e)
     {
         if (!enableOptimization) return;
         isHovering = true;
         if (!isDragging && !isInTargetZone) ChangeState(PartState.Hover);
     }
 
-    private void OnMouseExit()
+    public void OnPointerExit(PointerEventData e)
     {
         if (!enableOptimization) return;
         isHovering = false;
         if (!isDragging && !isInTargetZone) ChangeState(PartState.Default);
     }
 
-    private void OnMouseDown()
+    public void OnPointerDown(PointerEventData e)
     {
-        if (!enableOptimization) return;
+        if (!enableOptimization || e.button != PointerEventData.InputButton.Left) return;
         // 鼠标按下，标记为正在拖拽
         isDragging = true;
         ChangeState(PartState.Dragging);
     }
 
-    private void OnMouseUp()
+    public void OnPointerUp(PointerEventData e)
     {
-        if (!enableOptimization) return;
+        if (!enableOptimization || e.button != PointerEventData.InputButton.Left) return;
         // 鼠标松开，结束拖拽
         isDragging = false;
         isInTargetZone = false; // 松手重置区域状态

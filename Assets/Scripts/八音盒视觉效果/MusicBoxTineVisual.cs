@@ -22,8 +22,8 @@ public class MusicBoxTineVisual : MonoBehaviour
     [Tooltip("过渡曲线")]
     public Ease transitionEase = Ease.OutQuad;
 
-    private Color defaultColor;
-    private Color pressedColor;
+    public Color defaultColor;
+    public Color pressedColor;
     
     // 防抖锁
     private float lastPressTime;
@@ -34,20 +34,20 @@ public class MusicBoxTineVisual : MonoBehaviour
     private void Awake()
     {
         // 1. 记录初始颜色
-        if (defaultRenderer != null)
-        {
-            defaultColor = defaultRenderer.color;
-            defaultColor.a = 1f; // 默认不透明
-            defaultRenderer.color = defaultColor;
-        }
+        // if (defaultRenderer != null)
+        // {
+        //     defaultColor = defaultRenderer.color;
+        //     defaultColor.a = 1f; // 默认不透明
+        //     defaultRenderer.color = defaultColor;
+        // }
         
-        if (pressedRenderer != null)
-        {
-            pressedColor = pressedRenderer.color;
-            pressedColor.a = 0f; // 按下状态初始透明
-            pressedRenderer.color = pressedColor;
-            pressedRenderer.enabled = false; // 初始不渲染
-        }
+        // if (pressedRenderer != null)
+        // {
+        //     pressedColor = pressedRenderer.color;
+        //     pressedColor.a = 0f; // 按下状态初始透明
+        //     pressedRenderer.color = pressedColor;
+        //     pressedRenderer.enabled = false; // 初始不渲染
+        // }
     }
 
     /// <summary>

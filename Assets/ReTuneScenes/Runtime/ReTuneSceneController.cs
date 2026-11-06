@@ -154,9 +154,12 @@ namespace ReTune.Scenes
             if (story.parts[index].structure) ReTuneSession.structure = index; else ReTuneSession.tone = index;
             RefreshSlots();
         }
+        //刷新槽位
         void RefreshSlots()
         {
             if(screen==Screen.Parts)CancelPartsPreview();
+             //只要一刷新槽位（换零件），立刻强制停止所有滚轮，等待再次试调
+            SetRollersActive(false);
             Set(structureLabel, "1. Rhythm Slot\n" + (ReTuneSession.structure < 0 ? "Drop a rhythm part here" : story.parts[ReTuneSession.structure].name + " (click to remove)"));
             Set(toneLabel, "2. Tone Slot\n" + (ReTuneSession.tone < 0 ? "Drop a tone part here" : story.parts[ReTuneSession.tone].name + " (click to remove)"));
             if (structureLabel != null) structureLabel.gameObject.SetActive(ReTuneSession.structure < 0);
@@ -168,6 +171,31 @@ namespace ReTune.Scenes
             }
             var art=GetComponent<ReTunePartsArt>();if(art!=null)art.RefreshInstalledParts();
         }
+        private void SetRollersActive(bool active)
+        {
+            // 遍历所有零件，只让放入槽位的零件转动
+            if (partObjects != null)
+            {
+                for (int i = 0; i < partObjects.Length; i++)
+                {
+                    if (partObjects[i] == null) continue;
+                    // 找到零件子物体上的滚轮控制器
+                    var mb = partObjects[i].GetComponentInChildren<MusicBoxController>();
+                    if (mb != null)
+                    {
+                        // 如果是要启动，且这个零件刚好在结构槽或音色槽里
+                        if (active && (i == ReTuneSession.structure || i == ReTuneSession.tone))
+                        {
+                            mb.StartRolling();
+                        }
+                        else
+                        {
+                            mb.StopRolling(); //没装上的，或者要求停止的，全部停下并复位音梳
+                        }
+                    }
+                }
+            }
+        }
         public void RemovePart(int index)
         {
             if (!CanInteract) return;
@@ -175,10 +203,27 @@ namespace ReTune.Scenes
             else if (ReTuneSession.tone == index) ClearTone();
         }
         public int RecipeMatches() => (ReTuneSession.structure == Customer.structure ? 1 : 0) + (ReTuneSession.tone == Customer.tone ? 1 : 0);
+        public bool PartsIncomplete => ReTuneSession.structure < 0 || ReTuneSession.tone < 0;
+        
+        //开始调试
         public void Trial()
         {
             if (!CanInteract || screen != Screen.Parts) return;
-            var art=GetComponent<ReTunePartsArt>();if(art!=null&&!art.BeginPreview())return;
+
+            // 零件不齐（缺齿轮/滚轮或都缺）：卡住效果，不进入试听
+            if (PartsIncomplete)
+            {
+                var art = GetComponent<ReTunePartsArt>();
+                if (art != null) art.PlayJam();
+                Set(hint, ReTuneSession.structure < 0 && ReTuneSession.tone < 0 ? "Fit a rhythm part and a tone part first." : ReTuneSession.structure < 0 ? "Fit a rhythm part first." : "Fit a tone part first.");
+                return;
+            }
+
+            var art2=GetComponent<ReTunePartsArt>();if(art2!=null&&!art2.BeginPreview())return;
+
+            //开始试调时，让装好的滚轮转起来
+            SetRollersActive(true);
+
             int correct = RecipeMatches();
             response=correct*.5f;
             if (correct == 2) { noiseTarget = 0; transitioning = true; transitionTime = 0; Set(hint, "Good match. Get ready to play."); }
@@ -300,7 +345,14 @@ namespace ReTune.Scenes
         AudioSource[] Sources() => new[] { trackA, trackB, trackC };
         void PlayAudio() { double start = AudioSettings.dspTime + .1; foreach (var source in Sources()) if (source != null) { source.Stop(); if(UsesGameplayMusic||narrativeMusic)source.PlayScheduled(start); } }
         void OnApplicationFocus(bool focus) { if (!focus && screen != Screen.Menu && screen != Screen.Ending) Pause(); }
-        void OnDisable() { foreach (var source in Sources()) if (source != null) source.Stop(); }
+        void OnDisable()
+        { 
+            foreach (var source in Sources()) 
+                if (source != null) 
+                    source.Stop(); 
+
+            SetRollersActive(false); //禁用时停止滚轮
+        }
         void OnDestroy(){foreach(var clip in alignedStems)if(clip!=null)Destroy(clip);alignedStems.Clear();}
         static void Set(Text label, string text) { if (label != null) label.text = text; }
         public static string ScenePath(Screen target) => "Assets/ReTuneScenes/Scenes/" + new[] { "00_Start", "01_Shop", "02_Parts", "03_Performance", "04_Reply", "05_Ending" }[(int)target] + ".unity";
