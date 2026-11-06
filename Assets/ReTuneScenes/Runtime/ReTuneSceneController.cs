@@ -24,6 +24,10 @@ namespace ReTune.Scenes
         public Button trialButton, originalButton;
         [Header("Audio sources are pre-existing scene objects")]
         public AudioSource trackA, trackB, trackC;
+        [Header("Customer stems: A original, B response, C noise")]
+        public AudioClip[] postmanStems=new AudioClip[3];
+        public AudioClip[] guitaristStems=new AudioClip[3];
+        readonly System.Collections.Generic.List<AudioClip> alignedStems=new System.Collections.Generic.List<AudioClip>();
         [Header("邮差实验版：A 原声、B 回应、C 干扰，独立分轨同步播放")]
         public bool usePostmanExperiment=true;
         [Range(0,1)] public float postmanMusicVolume=.4f, postmanNoiseVolume=.25f;
@@ -51,7 +55,7 @@ namespace ReTune.Scenes
         void Start()
         {
             if (!ReTuneSession.active && screen != Screen.Menu && screen != Screen.Ending) ReTuneSession.Begin(previewCustomer);
-            ConfigurePostmanAudio();
+            ConfigureCustomerAudio();
             if (overlay != null) overlay.SetActive(false);
             frozen = false;
             if (customerLabel != null) customerLabel.text = "DAY 0" + (ReTuneSession.customer + 1) + "   " + Customer.name + "  /  " + Customer.emotion;
@@ -190,7 +194,7 @@ namespace ReTune.Scenes
             holding = transitioning = false; noise = noiseTarget = 0;
             Set(hint, "A/D: stay green. Mouse: click or hold."); PlayAudio(); UpdatePerformanceUI();
         }
-        public void SetWaveMix(float amount) { response = Mathf.Clamp01(amount); }
+        public void SetWaveMix(float amount) { response = Mathf.Clamp01(amount);noise=noiseTarget=1-response; }
         public void CompleteWaveStage(int perfectHits, float stability)
         {
             ReTuneSession.hits=perfectHits; ReTuneSession.response=1; ReTuneSession.stability=stability; Load(Screen.Reply);
@@ -242,22 +246,54 @@ namespace ReTune.Scenes
             Set(stats, "Balance " + (Stability * 100).ToString("0") + "%\nHits " + hits + " / " + noteCount);
             Set(noteLabel, (IsHold ? "Hold " + holdDuration.ToString("0.00") + " s" : "Click") + "\nNote " + Mathf.Min(note + 1, noteCount) + " / " + noteCount);
         }
-        void ConfigurePostmanAudio()
+        void ConfigureCustomerAudio()
         {
             foreach(var source in Sources())if(source!=null){source.Stop();source.playOnAwake=false;}
             if(screen==Screen.Menu||screen==Screen.Ending)return;
-            if (!usePostmanExperiment || ReTuneSession.customer != 0) return;
-            var clips=new[] { Resources.Load<AudioClip>("Audio/PostmanExperiment/PostmanA"),Resources.Load<AudioClip>("Audio/PostmanExperiment/PostmanB"),Resources.Load<AudioClip>("Audio/PostmanExperiment/PostmanC") };
+            var clips=ReTuneSession.customer==0?postmanStems:ReTuneSession.customer==1?guitaristStems:null;
+            bool assigned=clips!=null&&clips.Length==3&&clips[0]!=null&&clips[1]!=null&&clips[2]!=null;
+            // Retain the older postman preview only in scenes without the newly assigned set.
+            if(!assigned)
+            {
+                if(!usePostmanExperiment||ReTuneSession.customer!=0)return;
+                clips=new[] { Resources.Load<AudioClip>("Audio/PostmanExperiment/PostmanA"),Resources.Load<AudioClip>("Audio/PostmanExperiment/PostmanB"),Resources.Load<AudioClip>("Audio/PostmanExperiment/PostmanC") };
+            }
             var sources=Sources();
             for(int i=0;i<3;i++)if(clips[i]==null || sources[i]==null)return;
+            if(assigned)clips=AlignStemLoops(clips);
             for(int i=0;i<3;i++){sources[i].Stop();sources[i].clip=clips[i];sources[i].loop=true;sources[i].pitch=1;sources[i].spatialBlend=0;sources[i].playOnAwake=false;}
             postmanAudio=true;
+        }
+        AudioClip[] AlignStemLoops(AudioClip[] clips)
+        {
+            int frames=0;
+            foreach(var clip in clips)
+            {
+                if(clip.frequency!=clips[0].frequency||clip.channels!=clips[0].channels)
+                    throw new System.InvalidOperationException("Customer stems must share sample rate and channel count.");
+                frames=Mathf.Max(frames,clip.samples);
+            }
+            var result=new AudioClip[3];
+            for(int i=0;i<3;i++)
+            {
+                var clip=clips[i];
+                if(clip.samples==frames){result[i]=clip;continue;}
+                clip.LoadAudioData();
+                var original=new float[clip.samples*clip.channels];
+                if(!clip.GetData(original,0))throw new System.InvalidOperationException("Cannot read stem: "+clip.name);
+                var padded=new float[frames*clip.channels];System.Array.Copy(original,padded,original.Length);
+                var aligned=AudioClip.Create(clip.name+" / aligned loop",frames,clip.channels,clip.frequency,false);
+                alignedStems.Add(aligned);
+                if(!aligned.SetData(padded,0))throw new System.InvalidOperationException("Cannot align stem: "+clip.name);
+                result[i]=aligned;
+            }
+            return result;
         }
         void UpdateMix()
         {
             if (trackA != null) trackA.volume = UsesGameplayMusic||narrativeMusic?(postmanAudio ? postmanMusicVolume : .17f):0;
             if (trackB != null) trackB.volume = UsesGameplayMusic||narrativeMusic?response * (postmanAudio ? postmanMusicVolume : .17f):0;
-            if (trackC != null) trackC.volume = UsesGameplayMusic||narrativeMusic?noise * (postmanAudio ? postmanNoiseVolume : .08f):0;
+            if (trackC != null) trackC.volume = UsesGameplayMusic||narrativeMusic?(screen==Screen.Performance?1-response:noise) * (postmanAudio ? postmanNoiseVolume : .08f):0;
             if (responseFill != null) responseFill.fillAmount = response;
             Set(mixLabel, "A Melody\nB Reply " + (response * 100).ToString("0") + "%\nC Noise " + (noise * 100).ToString("0") + "%");
         }
@@ -265,6 +301,7 @@ namespace ReTune.Scenes
         void PlayAudio() { double start = AudioSettings.dspTime + .1; foreach (var source in Sources()) if (source != null) { source.Stop(); if(UsesGameplayMusic||narrativeMusic)source.PlayScheduled(start); } }
         void OnApplicationFocus(bool focus) { if (!focus && screen != Screen.Menu && screen != Screen.Ending) Pause(); }
         void OnDisable() { foreach (var source in Sources()) if (source != null) source.Stop(); }
+        void OnDestroy(){foreach(var clip in alignedStems)if(clip!=null)Destroy(clip);alignedStems.Clear();}
         static void Set(Text label, string text) { if (label != null) label.text = text; }
         public static string ScenePath(Screen target) => "Assets/ReTuneScenes/Scenes/" + new[] { "00_Start", "01_Shop", "02_Parts", "03_Performance", "04_Reply", "05_Ending" }[(int)target] + ".unity";
         void Load(Screen target)

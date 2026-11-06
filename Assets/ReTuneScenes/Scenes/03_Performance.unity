@@ -18359,6 +18359,14 @@ MonoBehaviour:
   safeRange: 0.2
   minimumStability: 0.35
   correctionSpeed: 0.8
+  postmanStems:
+  - {fileID: 8300000, guid: ffb1a9412bae8a140889a1324ff0663b, type: 3}
+  - {fileID: 8300000, guid: 31566659420516348971024545178ead, type: 3}
+  - {fileID: 8300000, guid: 9d5e3a948776fcb459d8b48d52fc83dd, type: 3}
+  guitaristStems:
+  - {fileID: 8300000, guid: a44351e3c4cd7f14ab4385acb9623519, type: 3}
+  - {fileID: 8300000, guid: b2544362be73a8d44a974dc893dddb69, type: 3}
+  - {fileID: 8300000, guid: c80a0aa5051a935459994e66535cdb4c, type: 3}
 --- !u!4 &618367236
 Transform:
   m_ObjectHideFlags: 0
