@@ -31,6 +31,7 @@ namespace ReTune.Scenes
         [Header("Customer stems: A original, B response, C noise")]
         public AudioClip[] postmanStems=new AudioClip[3];
         public AudioClip[] guitaristStems=new AudioClip[3];
+        public AudioClip[] bookshopOwnerStems=new AudioClip[3];
         readonly System.Collections.Generic.List<AudioClip> alignedStems=new System.Collections.Generic.List<AudioClip>();
         [Header("邮差实验版：A 原声、B 回应、C 干扰，独立分轨同步播放")]
         public bool usePostmanExperiment=true;
@@ -304,7 +305,7 @@ namespace ReTune.Scenes
             foreach(var source in Sources())if(source!=null){source.Stop();source.playOnAwake=false;}
             if(screen==Screen.Menu||screen==Screen.Ending)return;
             var library=ReTuneAudioLibrary.Load();
-            var clips=library!=null?library.Stems(ReTuneSession.customer):ReTuneSession.customer==0?postmanStems:ReTuneSession.customer==1?guitaristStems:null;
+            var clips=library!=null?library.Stems(ReTuneSession.customer):ReTuneSession.customer==0?postmanStems:ReTuneSession.customer==1?guitaristStems:ReTuneSession.customer==2?bookshopOwnerStems:null;
             postmanAudio=false;
             bool assigned=clips!=null&&clips.Length==3&&clips[0]!=null&&clips[1]!=null&&clips[2]!=null;
             // Retain the older postman preview only in scenes without the newly assigned set.

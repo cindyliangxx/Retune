@@ -4028,6 +4028,10 @@ MonoBehaviour:
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
+  bookshopOwnerStems:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
   usePostmanExperiment: 1
   postmanMusicVolume: 0.4
   postmanNoiseVolume: 0.25

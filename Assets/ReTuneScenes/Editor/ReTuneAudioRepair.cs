@@ -16,11 +16,11 @@ public static class ReTuneAudioRepair
         const string path="Assets/Resources/ReTuneAudioLibrary.asset";
         var library=AssetDatabase.LoadAssetAtPath<ReTuneAudioLibrary>(path);
         if(library==null){library=ScriptableObject.CreateInstance<ReTuneAudioLibrary>();AssetDatabase.CreateAsset(library,path);}
-        library.postman=LoadStems("邮差","(1)");library.guitarist=LoadStems("吉他手","");
+        library.postman=LoadStems("邮差","(1)");library.guitarist=LoadStems("吉他手","");library.bookshopOwner=LoadStems("书店老板","");
         library.menuMusic=AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/Resources/Audio/Background/LoFiBGM.wav");
         library.dialogueMusic=AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/Resources/Audio/Background/LoFiBGM.wav");
         library.endingMusic=AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/音频/BGM/人员名单_bgm.mp3");
-        if(library.menuMusic==null||library.dialogueMusic==null||library.endingMusic==null||library.postman.Any(c=>c==null)||library.guitarist.Any(c=>c==null))throw new Exception("Missing audio asset");
+        if(library.menuMusic==null||library.dialogueMusic==null||library.endingMusic==null||library.postman.Any(c=>c==null)||library.guitarist.Any(c=>c==null)||library.bookshopOwner.Any(c=>c==null))throw new Exception("Missing audio asset");
         EditorUtility.SetDirty(library);AssetDatabase.SaveAssets();
         var active=SceneManager.GetActiveScene();
         foreach(var name in new[]{"01_Shop","02_Parts","03_Performance","04_Reply","05_Ending"})
@@ -30,7 +30,7 @@ public static class ReTuneAudioRepair
             foreach(var root in scene.GetRootGameObjects())
             {
                 foreach(var button in root.GetComponentsInChildren<UnityEngine.UI.Button>(true).Where(b=>b.name=="Title").ToArray())UnityEngine.Object.DestroyImmediate(button.gameObject);
-                foreach(var c in root.GetComponentsInChildren<ReTuneSceneController>(true)){c.postmanStems=library.postman;c.guitaristStems=library.guitarist;EditorUtility.SetDirty(c);}
+                foreach(var c in root.GetComponentsInChildren<ReTuneSceneController>(true)){c.postmanStems=library.postman;c.guitaristStems=library.guitarist;c.bookshopOwnerStems=library.bookshopOwner;EditorUtility.SetDirty(c);}
             }
             EditorSceneManager.MarkSceneDirty(scene);EditorSceneManager.SaveScene(scene);
             if(opened)EditorSceneManager.CloseScene(scene,true);
@@ -47,7 +47,7 @@ public static class ReTuneAudioRepair
         var report=new System.Collections.Generic.List<string>();bool background=Application.runInBackground;Application.runInBackground=true;
         try
         {
-            for(int customer=0;customer<2;customer++)foreach(string name in new[]{"02_Parts","03_Performance"})
+            for(int customer=0;customer<3;customer++)foreach(string name in new[]{"02_Parts","03_Performance"})
             {
                 ReTuneSession.Begin(customer);
                 SceneManager.LoadScene("Assets/ReTuneScenes/Scenes/"+name+".unity");
@@ -56,7 +56,7 @@ public static class ReTuneAudioRepair
                 if(c==null)throw new Exception("Controller missing");
                 c.CloseOverlay();if(name=="02_Parts")c.OriginalMelody();
                 yield return new EditorWaitForSeconds(.5f);
-                string expected=customer==0?"邮差":"吉他手";
+                string expected=customer==0?"邮差":customer==1?"吉他手":"书店老板";
                 if(!c.trackA.clip.name.StartsWith(expected)||!c.trackB.clip.name.StartsWith(expected)||!c.trackC.clip.name.StartsWith(expected))throw new Exception("Wrong customer audio in "+name);
                 if(name=="03_Performance"&&(!c.trackA.isPlaying||!c.trackB.isPlaying||c.trackB.volume<=0||c.trackC.volume!=0||c.trackC.isPlaying))throw new Exception("Performance is not A+B only");
                 if(!ReTuneBackgroundMusic.Instance.IsBlocked)throw new Exception("BGM overlapping gameplay");

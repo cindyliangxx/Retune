@@ -20,7 +20,10 @@ MonoBehaviour:
   - {fileID: 8300000, guid: a44351e3c4cd7f14ab4385acb9623519, type: 3}
   - {fileID: 8300000, guid: b2544362be73a8d44a974dc893dddb69, type: 3}
   - {fileID: 8300000, guid: c80a0aa5051a935459994e66535cdb4c, type: 3}
+  bookshopOwner:
+  - {fileID: 8300000, guid: 8d63d8dc8bce14df0079b4839b9c3a68, type: 3}
+  - {fileID: 8300000, guid: e5946a1de33dbd2f7992d25206e71ad6, type: 3}
+  - {fileID: 8300000, guid: dabe12ab008ba5b23dae41220e6ecec1, type: 3}
   menuMusic: {fileID: 8300000, guid: abdf36e04395a914c96f9b3fd80307ab, type: 3}
   dialogueMusic: {fileID: 8300000, guid: abdf36e04395a914c96f9b3fd80307ab, type: 3}
   endingMusic: {fileID: 8300000, guid: e54497fde8c33734a940aa389b5bde9a, type: 3}
-
