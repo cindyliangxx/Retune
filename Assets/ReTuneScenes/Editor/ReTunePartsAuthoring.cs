@@ -34,7 +34,7 @@ public static class ReTunePartsAuthoring
         var paper=Art("180645",Vector2.zero,new Vector2(11.9f,6.2f),-20);paper.sprite=AssetDatabase.LoadAssetAtPath<Sprite>("Assets/ReTuneScenes/UI/Square.png");paper.transform.localScale=new Vector3(11.9f/paper.sprite.bounds.size.x,6.2f/paper.sprite.bounds.size.y,1);paper.color=new Color(.97f,.94f,.87f);
         var blue=Object.Instantiate(paper);blue.name="Blue work surface";blue.transform.localScale=paper.transform.localScale*.85f;blue.color=new Color(.72f,.84f,.87f);blue.sortingOrder=-19;
         Art("180516",new Vector2(-2.5f,-.3f),new Vector2(6.2f,3.9f),1);
-        art.gear=Art("173613",new Vector2(-.8f,-1.35f),new Vector2(1.8f,1.8f),5).transform;
+        // art.gear=Art("173613",new Vector2(-.8f,-1.35f),new Vector2(1.8f,1.8f),5).transform; // gear 已去掉
         art.small=Art("173854",new Vector2(-1.55f,-.8f),new Vector2(.55f,.55f),4).transform;
         Art("180645",new Vector2(-2.55f,-1.35f),new Vector2(1.65f,2.1f),6);
         Art("182114",new Vector2(-2.55f,-2),new Vector2(1.65f,.8f),9);

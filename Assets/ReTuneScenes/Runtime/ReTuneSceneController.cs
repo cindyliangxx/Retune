@@ -18,6 +18,9 @@ namespace ReTune.Scenes
         public Collider2D structureSlot, toneSlot;
         public Transform needle, approachRing;
         public Transform musicBox; // 八音盒：零件放进卡槽后挂到这里，方便整体抖动
+        [Header("结构零件卡槽吸附")]
+        public Vector3 structureSlotPosition = new Vector3(-0.327f, 0.327f, 0f); // 结构零件吸附位置
+        public Vector3 structureSlotScale = new Vector3(0.75f, 0.75f, 1f);        // 结构零件“默认状态”节点缩放
         public ReTunePartDrag[] partObjects;
         public Image stabilityFill, responseFill, holdFill, phraseFill;
         public GameObject overlay;

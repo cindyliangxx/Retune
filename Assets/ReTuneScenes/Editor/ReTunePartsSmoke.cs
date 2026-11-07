@@ -50,14 +50,14 @@ public static class ReTunePartsSmoke
                 // Two structurally distinct clips, not the same frame sequence reused.
                 Check(Part(4).GetComponentInChildren<Animator>().runtimeAnimatorController!=Part(5).GetComponentInChildren<Animator>().runtimeAnimatorController,"Rollers need different groups");
                 c.InstallPart(0);c.InstallPart(4);
-                Check(!art.gear.GetComponent<SpriteRenderer>().enabled&&!art.roller.GetComponent<SpriteRenderer>().enabled,"Original parts must be concealed");
+                Check(!art.roller.GetComponent<SpriteRenderer>().enabled,"Original roller must be concealed"); // gear 已去掉
                 Check(Vector3.Distance(Part(4).GetComponentInChildren<SpriteRenderer>().bounds.center,c.toneSlot.bounds.center)<.01f,"Roller alignment");
                 Check(Mathf.Abs(Part(4).GetComponentInChildren<SpriteRenderer>().bounds.size.x-art.roller.GetComponent<SpriteRenderer>().bounds.size.x)<.01f,"Roller fitted size");
                 c.InstallPart(1);c.InstallPart(5);
                 Check(ReTuneSession.structure==1&&ReTuneSession.tone==5,"Replacement selection");
                 for(int i=0;i<c.partObjects.Length;i++)if(c.partObjects[i].part==0||c.partObjects[i].part==4)
                 {Check(Vector3.Distance(c.partObjects[i].transform.localPosition,homes[i])<.01f,"Replaced part must return home");Check(Vector3.Distance(c.partObjects[i].transform.localScale,scales[i])<.01f,"Replaced part must recover scale");}
-                c.ClearParts();Check(art.gear.GetComponent<SpriteRenderer>().enabled&&art.roller.GetComponent<SpriteRenderer>().enabled,"Original parts should return");
+                c.ClearParts();Check(art.roller.GetComponent<SpriteRenderer>().enabled,"Original roller should return"); // gear 已去掉
                 c.InstallPart(0);c.InstallPart(4);
                 // Dropping a rhythm part over the tone slot must preserve the current recipe.
                 c.DropPart(1,c.worldCamera.WorldToScreenPoint(c.toneSlot.bounds.center),c.worldCamera);

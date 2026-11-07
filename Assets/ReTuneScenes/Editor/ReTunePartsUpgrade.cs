@@ -43,7 +43,7 @@ public static class ReTunePartsUpgrade
             visible.sprite=(Sprite)AnimationUtility.GetObjectReferenceCurve(clip,AnimationUtility.GetObjectReferenceCurveBindings(clip)[0])[0].value;
             box.size=visible.sprite.bounds.size;box.offset=visible.sprite.bounds.center;
         }
-        AlignSlot(controller.structureSlot,art.gear.GetComponent<SpriteRenderer>());
+        // AlignSlot(controller.structureSlot,art.gear.GetComponent<SpriteRenderer>()); // gear 已去掉
         AlignSlot(controller.toneSlot,original.GetComponent<SpriteRenderer>());
         art.rollerArea=controller.toneSlot;
         EditorSceneManager.MarkSceneDirty(scene);EditorSceneManager.SaveScene(scene);AssetDatabase.SaveAssets();

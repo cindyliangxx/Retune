@@ -8329,6 +8329,8 @@ MonoBehaviour:
   needle: {fileID: 0}
   approachRing: {fileID: 0}
   musicBox: {fileID: 0}
+  structureSlotPosition: {x: -0.327, y: 0.327, z: 0}
+  structureSlotScale: {x: 0.75, y: 0.75, z: 1}
   partObjects: []
   stabilityFill: {fileID: 0}
   responseFill: {fileID: 0}

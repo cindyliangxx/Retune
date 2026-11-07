@@ -5,7 +5,8 @@ namespace ReTune.Scenes
     public sealed class ReTunePartsArt : MonoBehaviour
     {
         public ReTuneSceneController controller;
-        public Transform gear, small, windingKey, roller;
+        public Transform small, windingKey, roller;
+        // public Transform gear;
         public Collider2D rollerArea, windingArea;
         public float windingDuration=.7f, playbackDuration=5f;
         public MusicBoxController originalRoller;
@@ -44,23 +45,67 @@ namespace ReTune.Scenes
 
         void Awake()
         {
+            AssignReferences(); // 动态补齐引用：没在 Inspector 拖的，按名字自动找
+
+            // 暂时去掉大齿轮：直接隐藏（避免它的 GearRotator 自己持续旋转）
+            if (controller != null && controller.musicBox != null)
+            {
+                var bigGear = DirectChild(controller.musicBox, "八音盒齿轮_大");
+                if (bigGear != null) bigGear.gameObject.SetActive(false);
+            }
+
             if(windingKey!=null) keyRest=windingKey.localRotation;
-            if(gear!=null) defaultGear=gear.GetComponent<SpriteRenderer>();
+            // if(gear!=null) defaultGear=gear.GetComponent<SpriteRenderer>();
             if(roller!=null) defaultRoller=roller.GetComponent<SpriteRenderer>();
             if(originalRoller==null && roller!=null) originalRoller=roller.GetComponentInChildren<MusicBoxController>();
             
-            if(gear!=null) gearDriver=gear.GetComponent<GearRotator>();
+            // if(gear!=null) gearDriver=gear.GetComponent<GearRotator>();
             if(small!=null) smallDriver=small.GetComponent<GearRotator>();
             
-            gearDriverEnabled=gearDriver!=null&&gearDriver.enabled;
+            // gearDriverEnabled=gearDriver!=null&&gearDriver.enabled;
             smallDriverEnabled=smallDriver!=null&&smallDriver.enabled;
             
             SetSpeeds(false);
         }
 
+        // 动态补齐引用
+        void AssignReferences()
+        {
+            Transform box = controller != null ? controller.musicBox : null;
+
+            if (box != null)
+            {
+                // if (gear == null) gear = DirectChild(box, "八音盒齿轮_大");
+                if (small == null) small = DirectChild(box, "八音盒齿轮_小");
+                if (windingKey == null) windingKey = DirectChild(box, "winding-key");
+            }
+
+            if (roller == null) roller = SceneRootByName("滚轮控制器");
+            if (originalRoller == null && roller != null) originalRoller = roller.GetComponent<MusicBoxController>();
+        }
+
+        Transform DirectChild(Transform parent, string name)
+        {
+            for (int i = 0; i < parent.childCount; i++)
+            {
+                var c = parent.GetChild(i);
+                if (c.name == name) return c;
+            }
+            return null;
+        }
+
+        Transform SceneRootByName(string name)
+        {
+            foreach (var root in UnityEngine.SceneManagement.SceneManager.GetActiveScene().GetRootGameObjects())
+            {
+                if (root.name == name) return root.transform;
+            }
+            return null;
+        }
+
         public void FitInstalledPart(ReTunePartDrag part,Collider2D slot)
         {
-            var reference = slot==controller.structureSlot ? gear : roller;
+            var reference = roller; // 大齿轮已去掉，只按滚轮参考
             if (reference == null) return;
 
             SpriteRenderer visual=null;
@@ -84,11 +129,11 @@ namespace ReTune.Scenes
 
         public void RefreshInstalledParts()
         {
-            if(defaultGear==null && gear!=null) defaultGear=gear.GetComponent<SpriteRenderer>();
+            // if(defaultGear==null && gear!=null) defaultGear=gear.GetComponent<SpriteRenderer>();
             if(defaultRoller==null && roller!=null) defaultRoller=roller.GetComponent<SpriteRenderer>();
             
             // 八音盒齿轮/滚轮作为固定底座，零件装入后保持可见（不再隐藏）
-            if(defaultGear!=null) defaultGear.enabled=true;
+            // if(defaultGear!=null) defaultGear.enabled=true;
             if(defaultRoller!=null) defaultRoller.enabled=true;
             
             SetSpeeds(false);
@@ -103,7 +148,7 @@ namespace ReTune.Scenes
             if(windingKey!=null) windingKey.localRotation=keyRest;
             if(wasJamming)
             {
-                if(gear!=null) gear.localRotation=jamGearRest;
+                // if(gear!=null) gear.localRotation=jamGearRest;
                 if(small!=null) small.localRotation=jamSmallRest;
             }
             SetSpeeds(false);
@@ -133,7 +178,7 @@ namespace ReTune.Scenes
         {
             if (IsBusy) return;
             if (windingKey != null) jamKeyRest = windingKey.localRotation;
-            if (gear != null) jamGearRest = gear.localRotation;
+            // if (gear != null) jamGearRest = gear.localRotation;
             if (small != null) jamSmallRest = small.localRotation;
             jamming = true;
             jamTime = 0f;
@@ -158,7 +203,7 @@ namespace ReTune.Scenes
                 keyAngle = 180f * (1f - u); gearAngle = -22f * (1f - u); smallAngle = 22f * (1f - u);
             }
             if (windingKey != null) windingKey.localRotation = jamKeyRest * Quaternion.Euler(keyAngle, 0f, 0f);
-            if (gear != null) gear.localRotation = jamGearRest * Quaternion.Euler(0f, 0f, gearAngle);
+            // if (gear != null) gear.localRotation = jamGearRest * Quaternion.Euler(0f, 0f, gearAngle);
             if (small != null) small.localRotation = jamSmallRest * Quaternion.Euler(0f, 0f, smallAngle);
         }
 
@@ -186,7 +231,7 @@ namespace ReTune.Scenes
         void TriggerStutterOnce()
         {
             // 齿轮卡顿（带回轮）
-            if (gearDriver != null) gearDriver.TriggerStutter(glitchDuration, 1f);
+            // if (gearDriver != null) gearDriver.TriggerStutter(glitchDuration, 1f); // 大齿轮已去掉
             if (smallDriver != null) smallDriver.TriggerStutter(glitchDuration, 1f);
             foreach (var part in controller.partObjects)
             {
@@ -244,7 +289,7 @@ namespace ReTune.Scenes
             }
             wasRunning = running;
 
-            if(gearDriver!=null)gearDriver.enabled=gearDriverEnabled&&running;
+            // if(gearDriver!=null)gearDriver.enabled=gearDriverEnabled&&running; // 大齿轮已去掉
             if(smallDriver!=null)smallDriver.enabled=smallDriverEnabled&&running;
             
             float rollerSpeed = originalRoller != null ? originalRoller.baseSpeed : 1f;
@@ -349,7 +394,7 @@ namespace ReTune.Scenes
         void OnDisable()
         {
             if(windingKey!=null) windingKey.localRotation=keyRest;
-            if(jamming){ if(gear!=null) gear.localRotation=jamGearRest; if(small!=null) small.localRotation=jamSmallRest; jamming=false; }
+            if(jamming){ /* if(gear!=null) gear.localRotation=jamGearRest; */ if(small!=null) small.localRotation=jamSmallRest; jamming=false; }
             SetSpeeds(true);
         }
     }

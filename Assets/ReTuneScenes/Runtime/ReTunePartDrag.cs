@@ -26,8 +26,6 @@ namespace ReTune.Scenes
         Vector3 defaultStateHomeScale;
         static readonly Vector3 InstalledRollerScale = new Vector3(0.65f, 0.65f, 1f);
         static readonly Vector3 InstalledRollerPosition = new Vector3(0f, 0f, -0.5f);
-        static readonly Vector3 SlotPosition = new Vector3(-0.327f, 0.327f, 0f);
-        static readonly Vector3 SlotDefaultStateScale = new Vector3(0.75f, 0.75f, 1f);
         void Awake()
         {
             home = transform.localPosition;
@@ -91,8 +89,8 @@ namespace ReTune.Scenes
             if (slot == controller.structureSlot)
             {
                 // 结构零件：吸附到固定点，缩放默认状态节点（不缩放根节点）
-                transform.localPosition = SlotPosition;
-                if (defaultStateNode != null) defaultStateNode.localScale = SlotDefaultStateScale;
+                transform.localPosition = controller.structureSlotPosition;
+                if (defaultStateNode != null) defaultStateNode.localScale = controller.structureSlotScale;
             }
             else
             {

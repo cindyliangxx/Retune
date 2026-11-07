@@ -22,6 +22,8 @@ namespace ReTune.Scenes
                 foreach(var button in root.GetComponentsInChildren<Button>(true))
                 {
                     if(button.name=="QTE_Note"||button.GetComponentInParent<ReTuneTitleMotion>()!=null)continue;
+                    // 跳过 Review/Original Melody 图片按钮：它们的 Image 就是按钮本体，不能被置透明
+                    if(button.transform.parent!=null && button.transform.parent.name=="外圈 遮罩")continue;
                     StyleButton(button);
                 }
             if(controller.overlay==null)return;
