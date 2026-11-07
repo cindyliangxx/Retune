@@ -8328,6 +8328,7 @@ MonoBehaviour:
   toneSlot: {fileID: 0}
   needle: {fileID: 0}
   approachRing: {fileID: 0}
+  musicBox: {fileID: 0}
   partObjects: []
   stabilityFill: {fileID: 0}
   responseFill: {fileID: 0}

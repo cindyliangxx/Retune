@@ -1,4 +1,5 @@
 using UnityEngine;
+using DG.Tweening;
 namespace ReTune.Scenes
 {
     public sealed class ReTunePartsArt : MonoBehaviour
@@ -21,6 +22,22 @@ namespace ReTune.Scenes
         bool gearDriverEnabled, smallDriverEnabled;
         
         bool wasRunning = false; // 监控状态改变，只在停下时重置一次
+
+        [Header("选错零件卡壳效果（滚轮对齿轮错/滚轮错齿轮对/两个都错）")]
+        public float goodDuration = 2f;      // 先正常转动多久（秒）
+        public float glitchInterval = 0.5f;  // 卡顿间隔（秒）
+        public float glitchDuration = 0.2f;  // 每次卡顿持续（秒）
+        public bool glitchy;                 // 本次试调是否选错（运行时由 Trial 设置）
+
+        [Header("八音盒抖动")]
+        public float shakeStrength = 6f;     // 抖动强度（角度）
+        public float shakeDuration = 0.25f;  // 每次抖动时长
+
+        float glitchTimer;
+        bool rollerStuck;
+        float rollerStuckTimer;
+        bool shaking;
+        Vector3 shakeRestPosition;
 
         public bool IsBusy => winding>0 || playing>0 || jamming;
         public bool IsPlaying => playing>0;
@@ -82,6 +99,7 @@ namespace ReTune.Scenes
             bool wasJamming = jamming;
             winding=playing=0;
             jamming=false;
+            StopShake();
             if(windingKey!=null) windingKey.localRotation=keyRest;
             if(wasJamming)
             {
@@ -103,6 +121,10 @@ namespace ReTune.Scenes
         {
             if(IsBusy || AnyDragging()) return false;
             playing=Mathf.Max(.1f,playbackDuration);
+            glitchy=false;
+            glitchTimer=0f;
+            rollerStuck=false;
+            rollerStuckTimer=0f;
             SetSpeeds(false);
             return true;
         }
@@ -144,6 +166,66 @@ namespace ReTune.Scenes
         static float QuadInOut(float u) => u < 0.5f ? 2f * u * u : 1f - Mathf.Pow(-2f * u + 2f, 2f) * 0.5f;
 
         bool AnyDragging(){foreach(var part in controller.partObjects)if(part!=null&&part.IsDragging)return true;return false;}
+
+        void UpdateGlitch(float dt)
+        {
+            if (rollerStuck)
+            {
+                rollerStuckTimer -= dt;
+                if (rollerStuckTimer <= 0f) rollerStuck = false;
+            }
+
+            glitchTimer -= dt;
+            if (glitchTimer <= 0f)
+            {
+                glitchTimer = glitchInterval;
+                TriggerStutterOnce();
+            }
+        }
+
+        void TriggerStutterOnce()
+        {
+            // 齿轮卡顿（带回轮）
+            if (gearDriver != null) gearDriver.TriggerStutter(glitchDuration, 1f);
+            if (smallDriver != null) smallDriver.TriggerStutter(glitchDuration, 1f);
+            foreach (var part in controller.partObjects)
+            {
+                if (part == null) continue;
+                if (part.part == ReTuneSession.structure)
+                {
+                    var gr = part.GetComponent<GearRotator>();
+                    if (gr != null) gr.TriggerStutter(glitchDuration, 1f);
+                }
+            }
+
+            // 滚轮卡顿：调用 TriggerGlitchEffect，并用 rollerStuck 让 SetSpeeds 保持冻结（音梳随之停住）
+            rollerStuck = true;
+            rollerStuckTimer = glitchDuration;
+            if (CurrentRoller != null) CurrentRoller.TriggerGlitchEffect("Stutter");
+
+            StartShake();
+        }
+
+        void StartShake()
+        {
+            if (shaking || controller == null || controller.musicBox == null) return;
+            shaking = true;
+            shakeRestPosition = controller.musicBox.localPosition;
+            controller.musicBox.DOKill();
+            controller.musicBox.DOShakePosition(shakeDuration, new Vector3(shakeStrength, shakeStrength, 0f), 30, 90f, false, false)
+                .SetLoops(-1, LoopType.Restart);
+        }
+
+        void StopShake()
+        {
+            if (!shaking) return;
+            shaking = false;
+            if (controller != null && controller.musicBox != null)
+            {
+                controller.musicBox.DOKill();
+                controller.musicBox.localPosition = shakeRestPosition;
+            }
+        }
         
         void SetSpeeds(bool paused)
         {
@@ -189,7 +271,7 @@ namespace ReTune.Scenes
                 bool installedAsStructure = part.part == ReTuneSession.structure;
                 bool isInstalled = installedAsTone || installedAsStructure;
 
-                if (!isInstalled || part.IsDragging || paused)
+                if (!isInstalled || part.IsDragging || paused || rollerStuck)
                 {
                     animator.speed = 0;
                 }
@@ -243,7 +325,17 @@ namespace ReTune.Scenes
             if(playing>0)
             {
                 playing=Mathf.Max(0,playing-dt);
-                if(playing==0)controller.StopPartsAudio();
+                if(glitchy && (playbackDuration - playing) >= goodDuration)
+                {
+                    UpdateGlitch(dt);
+                }
+                if(playing==0)
+                {
+                    controller.StopPartsAudio();
+                    glitchy=false;
+                    rollerStuck=false;
+                    StopShake();
+                }
             }
             if(jamming)
             {

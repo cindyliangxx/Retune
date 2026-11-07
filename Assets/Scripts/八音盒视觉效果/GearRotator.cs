@@ -113,43 +113,35 @@ public class GearRotator : MonoBehaviour
         float elapsed = 0f;
         float originalSpeed = baseDegreesPerSecond;
         float direction = isClockwise ? -1f : 1f;
+        float reverseSpeed = 60f + 60f * Mathf.Clamp01(intensity); // 回轮速度（度/秒），明显可见
 
-        // 卡顿期间：随机停止、减速、甚至偶尔轻微倒转
+        // 卡顿期间：回轮（反向转）→ 卡住不动，循环
         while (elapsed < duration)
         {
-            // 随机决定这一小段的表现：1=卡住不动, 2=极慢, 3=反向抽搐
-            int state = Random.Range(1, 4);
-            
-            if (state == 1)
+            // 回轮：反向转一下
+            float reverseDuration = Random.Range(0.06f, 0.12f);
+            float reverseElapsed = 0f;
+            while (reverseElapsed < reverseDuration && elapsed < duration)
             {
-                currentDegreesPerSecond = 0f;
-            }
-            else if (state == 2)
-            {
-                currentDegreesPerSecond = originalSpeed * Random.Range(0.1f, 0.3f);
-            }
-            else
-            {
-                // 反向抽搐（根据强度决定幅度）
-                currentDegreesPerSecond = -originalSpeed * intensity * Random.Range(0.5f, 1.5f);
-            }
-
-            // 执行当前状态下的旋转（模拟抽搐）
-            float stateDuration = Random.Range(0.03f, 0.1f);
-            float stateElapsed = 0f;
-            
-            while (stateElapsed < stateDuration && elapsed < duration)
-            {
-                // 每次旋转前再检查一遍开关，防止在卡顿中突然被外部关闭
-                if (!isSpinning) break; 
-
-                transform.Rotate(0, 0, direction * currentDegreesPerSecond * Time.deltaTime);
-                stateElapsed += Time.deltaTime;
+                if (!isSpinning) break;
+                transform.Rotate(0, 0, -direction * reverseSpeed * Time.deltaTime);
+                reverseElapsed += Time.deltaTime;
                 elapsed += Time.deltaTime;
                 yield return null;
             }
-            
-            if (!isSpinning) break; // 如果被外部中断，直接跳出大循环
+
+            // 卡住：停一下
+            float freezeDuration = Random.Range(0.08f, 0.15f);
+            float freezeElapsed = 0f;
+            while (freezeElapsed < freezeDuration && elapsed < duration)
+            {
+                if (!isSpinning) break;
+                freezeElapsed += Time.deltaTime;
+                elapsed += Time.deltaTime;
+                yield return null;
+            }
+
+            if (!isSpinning) break;
         }
 
         // 恢复

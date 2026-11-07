@@ -24,8 +24,8 @@ public class PartInteractionFeedback : MonoBehaviour, IPointerEnterHandler, IPoi
     public float hover_ScaleMultiplier = 1.1f;
     
     public bool hover_UseRotate = true;
-    public float hover_TiltAngle = 5f;
-    public float hover_VibrateStrength = 2f;
+    public float rotateDegreesPerSecond = 30f;   // 持续旋转速率（度/秒）
+    public float hover_LiftUpAmount = 0.3f;      // 悬浮时向上平移量
 
     public bool hover_UseSound = true;
     public AudioClip hover_Sound;
@@ -35,6 +35,7 @@ public class PartInteractionFeedback : MonoBehaviour, IPointerEnterHandler, IPoi
     public bool enableDrag = true;
     public bool drag_UseScale = true;
     public float drag_ScaleMultiplier = 1.2f;
+    public float drag_LiftUpAmount = 0.5f;       // 拖拽时向上平移量
 
     public bool drag_UseSound = true;
     public AudioClip drag_Sound;
@@ -51,6 +52,9 @@ public class PartInteractionFeedback : MonoBehaviour, IPointerEnterHandler, IPoi
     
     private Vector3 originalScale;
     private Quaternion originalRotation;
+    private Transform visualNode;
+    private Vector3 visualNodeHomePosition;
+    private Quaternion visualNodeHomeRotation;
     private AudioSource audioSource;
 
     // 状态记录
@@ -60,8 +64,8 @@ public class PartInteractionFeedback : MonoBehaviour, IPointerEnterHandler, IPoi
 
     // Tween 引用
     private Tween scaleTween;
+    private Tween moveTween;
     private Tween rotateTween;
-    private Tween vibrateTween;
     private Tween defaultFadeTween;
     private Tween hoverFadeTween;
     private Tween dragFadeTween;
@@ -71,6 +75,7 @@ public class PartInteractionFeedback : MonoBehaviour, IPointerEnterHandler, IPoi
         originalScale = transform.localScale;
         originalRotation = transform.localRotation;
 
+        FindVisualNode();
         AutoAssignRenderers();
 
         if (hover_UseSound || drag_UseSound)
@@ -91,6 +96,21 @@ public class PartInteractionFeedback : MonoBehaviour, IPointerEnterHandler, IPoi
         if (defaultRenderer != null) SetAlpha(defaultRenderer, 1f);
         if (hoverRenderer != null) SetAlpha(hoverRenderer, 0f);
         if (dragRenderer != null) SetAlpha(dragRenderer, 0f);
+    }
+
+    // 找到视觉节点（根的直接子节点上的 SpriteRenderer），上浮/旋转都作用在它上面，避免带动碰撞体
+    private void FindVisualNode()
+    {
+        foreach (var sr in GetComponentsInChildren<SpriteRenderer>(true))
+        {
+            if (sr.transform.parent == transform && sr.sprite != null)
+            {
+                visualNode = sr.transform;
+                visualNodeHomePosition = visualNode.localPosition;
+                visualNodeHomeRotation = visualNode.localRotation;
+                return;
+            }
+        }
     }
 
     // 素材没在 Inspector 拖入时，按「根的直接子节点=默认素材，其子节点=hover/drag 素材」自动补全
@@ -196,7 +216,7 @@ public class PartInteractionFeedback : MonoBehaviour, IPointerEnterHandler, IPoi
         if (currentState == newState) return;
         
         rotateTween?.Kill();
-        vibrateTween?.Kill();
+        moveTween?.Kill();
         
         currentState = newState;
 
@@ -216,12 +236,18 @@ public class PartInteractionFeedback : MonoBehaviour, IPointerEnterHandler, IPoi
 
     private void ApplyDefaultState()
     {
+        if (visualNode != null)
+        {
+            moveTween?.Kill();
+            moveTween = visualNode.DOLocalMove(visualNodeHomePosition, scaleDuration).SetEase(Ease.OutQuad);
+            visualNode.DOLocalRotateQuaternion(visualNodeHomeRotation, scaleDuration);
+        }
+
         if (hover_UseScale || drag_UseScale)
         {
             scaleTween?.Kill();
             scaleTween = transform.DOScale(originalScale, scaleDuration).SetEase(Ease.OutQuad);
         }
-        transform.DORotateQuaternion(originalRotation, scaleDuration);
         UpdateSpriteVisuals(false, false);
     }
 
@@ -231,21 +257,24 @@ public class PartInteractionFeedback : MonoBehaviour, IPointerEnterHandler, IPoi
 
         PlaySound(hover_Sound);
 
+        // 向上平移 + 持续旋转，作用在视觉节点上（不带动碰撞体）
+        if (visualNode != null)
+        {
+            moveTween?.Kill();
+            moveTween = visualNode.DOLocalMove(visualNodeHomePosition + new Vector3(0f, hover_LiftUpAmount, 0f), scaleDuration).SetEase(scaleEase);
+
+            if (hover_UseRotate)
+            {
+                rotateTween = visualNode.DOLocalRotate(new Vector3(0f, 0f, 360f), 360f / Mathf.Max(1f, rotateDegreesPerSecond), RotateMode.FastBeyond360)
+                    .SetLoops(-1, LoopType.Restart)
+                    .SetEase(Ease.Linear);
+            }
+        }
+
         if (hover_UseScale)
         {
             scaleTween?.Kill();
             scaleTween = transform.DOScale(originalScale * hover_ScaleMultiplier, scaleDuration).SetEase(scaleEase);
-        }
-
-        if (hover_UseRotate)
-        {
-            Quaternion targetRot = originalRotation * Quaternion.Euler(0, 0, hover_TiltAngle);
-            rotateTween = transform.DORotateQuaternion(targetRot, 0.4f).SetLoops(-1, LoopType.Yoyo).SetEase(Ease.InOutSine);
-            
-            if (hover_VibrateStrength > 0)
-            {
-                vibrateTween = transform.DOShakeRotation(0.3f, new Vector3(0, 0, hover_VibrateStrength), 10, 90f).SetLoops(-1, LoopType.Restart);
-            }
         }
         UpdateSpriteVisuals(hover_UseSpriteChange, false);
     }
@@ -256,13 +285,20 @@ public class PartInteractionFeedback : MonoBehaviour, IPointerEnterHandler, IPoi
 
         PlaySound(drag_Sound);
 
+        // 向上平移，作用在视觉节点上（不带动碰撞体）
+        if (visualNode != null)
+        {
+            moveTween?.Kill();
+            moveTween = visualNode.DOLocalMove(visualNodeHomePosition + new Vector3(0f, drag_LiftUpAmount, 0f), scaleDuration).SetEase(scaleEase);
+            visualNode.DOLocalRotateQuaternion(visualNodeHomeRotation, scaleDuration);
+        }
+
         if (drag_UseScale)
         {
             scaleTween?.Kill();
             scaleTween = transform.DOScale(originalScale * drag_ScaleMultiplier, scaleDuration).SetEase(scaleEase);
         }
 
-        transform.DORotateQuaternion(originalRotation, scaleDuration);
         UpdateSpriteVisuals(false, drag_UseSpriteChange);
     }
 
@@ -301,9 +337,18 @@ public class PartInteractionFeedback : MonoBehaviour, IPointerEnterHandler, IPoi
         if (!enableOptimization)
         {
             KillAllTweens();
-            ForceReturnToDefault();
+            // 直接复位（不启动 tween，避免与卡槽位置/缩放冲突）
+            isInTargetZone = false;
+            isHovering = false;
+            isDragging = false;
+            currentState = PartState.Default;
             transform.localScale = originalScale;
             transform.localRotation = originalRotation;
+            if (visualNode != null)
+            {
+                visualNode.localPosition = visualNodeHomePosition;
+                visualNode.localRotation = visualNodeHomeRotation;
+            }
 
             if (defaultRenderer != null) SetAlpha(defaultRenderer, 1f);
             if (hoverRenderer != null) SetAlpha(hoverRenderer, 0f);
@@ -313,7 +358,7 @@ public class PartInteractionFeedback : MonoBehaviour, IPointerEnterHandler, IPoi
 
     private void KillAllTweens()
     {
-        scaleTween?.Kill(); rotateTween?.Kill(); vibrateTween?.Kill();
+        scaleTween?.Kill(); moveTween?.Kill(); rotateTween?.Kill();
         defaultFadeTween?.Kill(); hoverFadeTween?.Kill(); dragFadeTween?.Kill();
     }
 

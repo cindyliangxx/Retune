@@ -17,6 +17,7 @@ namespace ReTune.Scenes
         public Camera worldCamera;
         public Collider2D structureSlot, toneSlot;
         public Transform needle, approachRing;
+        public Transform musicBox; // 八音盒：零件放进卡槽后挂到这里，方便整体抖动
         public ReTunePartDrag[] partObjects;
         public Image stabilityFill, responseFill, holdFill, phraseFill;
         public GameObject overlay;
@@ -225,6 +226,7 @@ namespace ReTune.Scenes
             SetRollersActive(true);
 
             int correct = RecipeMatches();
+            if (art2 != null) art2.glitchy = (correct < 2); // 选错零件：播放后段卡壳
             response=correct*.5f;
             if (correct == 2) { noiseTarget = 0; transitioning = true; transitionTime = 0; Set(hint, "Good match. Get ready to play."); }
             else if (correct == 1) { noiseTarget = .5f; Set(hint, "A little calmer. Try another part."); }

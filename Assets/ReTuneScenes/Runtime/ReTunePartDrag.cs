@@ -18,21 +18,39 @@ namespace ReTune.Scenes
         Vector3 homeScale;
         Quaternion homeRotation;
         float removeAt = -1;
+        Transform worldParent;
         Transform rollerVisual;
         Vector3 rollerHomeScale, rollerHomePosition;
         GearRotator gearDriver;
         Transform defaultStateNode;
         Vector3 defaultStateHomeScale;
-        static readonly Vector3 InstalledRollerScale = new Vector3(0.6676062f, 0.6676062f, 1f);
-        static readonly Vector3 InstalledRollerPosition = new Vector3(0f, 0f, -0.1f);
+        static readonly Vector3 InstalledRollerScale = new Vector3(0.65f, 0.65f, 1f);
+        static readonly Vector3 InstalledRollerPosition = new Vector3(0f, 0f, -0.5f);
         static readonly Vector3 SlotPosition = new Vector3(-0.327f, 0.327f, 0f);
         static readonly Vector3 SlotDefaultStateScale = new Vector3(0.75f, 0.75f, 1f);
         void Awake()
         {
             home = transform.localPosition;
+            worldParent = transform.parent;
             OriginalScale = transform.localScale;
             homeScale=transform.localScale;homeRotation=transform.localRotation;
             hitbox = GetComponentInChildren<Collider2D>();
+            // 把碰撞体从视觉子节点迁到根节点：避免悬浮/拖拽的缩放、上浮带动碰撞体（导致边缘来回抖动）
+            if (hitbox != null && hitbox.transform != transform)
+            {
+                var oldBox = hitbox as BoxCollider2D;
+                if (oldBox != null)
+                {
+                    var newBox = gameObject.AddComponent<BoxCollider2D>();
+                    newBox.isTrigger = oldBox.isTrigger;
+                    Vector3 lossy = oldBox.transform.lossyScale;
+                    newBox.size = new Vector2(oldBox.size.x * Mathf.Abs(lossy.x), oldBox.size.y * Mathf.Abs(lossy.y));
+                    Vector3 localCenter = transform.InverseTransformPoint(oldBox.transform.TransformPoint(oldBox.offset));
+                    newBox.offset = new Vector2(localCenter.x, localCenter.y);
+                    oldBox.enabled = false;
+                    hitbox = newBox;
+                }
+            }
             visuals = GetComponentsInChildren<SpriteRenderer>(true);
             labels = GetComponentsInChildren<Canvas>(true);
             spriteOrders = new int[visuals.Length]; labelOrders = new int[labels.Length];
@@ -66,8 +84,10 @@ namespace ReTune.Scenes
         {
             removeAt = -1;
             if (dragging) CancelDrag();
-            if (slot == null) { transform.localPosition = home; transform.localScale=homeScale;transform.localRotation=homeRotation; ApplyRollerSlotTransform(null); RestoreDefaultState(); return; }
+            if (slot == null) { ReparentTo(worldParent); transform.localPosition = home; transform.localScale=homeScale;transform.localRotation=homeRotation; ApplyRollerSlotTransform(null); RestoreDefaultState(); SetFeedbackActive(true); return; }
+            ReparentTo(controller != null && controller.musicBox != null ? controller.musicBox : worldParent); // 放进卡槽：挂到八音盒下
             transform.localScale=homeScale;transform.localRotation=homeRotation;
+            SetFeedbackActive(false); // 进卡槽：禁用手感反馈脚本
             if (slot == controller.structureSlot)
             {
                 // 结构零件：吸附到固定点，缩放默认状态节点（不缩放根节点）
@@ -87,6 +107,16 @@ namespace ReTune.Scenes
         void RestoreDefaultState()
         {
             if (defaultStateNode != null) defaultStateNode.localScale = defaultStateHomeScale;
+        }
+        void ReparentTo(Transform newParent)
+        {
+            if (newParent == null || transform.parent == newParent) return;
+            transform.SetParent(newParent, true);
+        }
+        void SetFeedbackActive(bool active)
+        {
+            var feedback = GetComponent<PartInteractionFeedback>();
+            if (feedback != null) feedback.SetOptimizationState(active);
         }
         void ApplyRollerSlotTransform(Collider2D slot)
         {
