@@ -49,15 +49,15 @@ namespace ReTune.Scenes
                 if(mode==Mode.Shop){pages.AddRange(customer.dialogue);dialogueEnd=pages.Count;}
                 else {pages.AddRange(customer.reply);pages.AddRange(customer.departure);controller.NarrativeAudio(true);}
             }
-            floatingDialogue=GetComponent<ReTuneDialoguePresentation>();album=GetComponent<ReTuneAlbumSequence>();Show();
+            floatingDialogue=mode==Mode.Ending?null:GetComponent<ReTuneDialoguePresentation>();album=GetComponent<ReTuneAlbumSequence>();index=mode==Mode.Ending?0:Mathf.Clamp(ReTuneProgress.ConsumePage(this),0,Mathf.Max(0,pages.Count-1));Show();
             if(mode==Mode.Shop&&!busy)StartCoroutine(SlideVisitor());
         }
         void Update()
         {
-            if(!begun||busy)return;
+            if(!begun||busy||ReTuneExitDialog.IsOpen)return;
             if(album!=null&&album.BlocksDialogueInput)return;
             if(controller!=null && controller.PartsAnimationPaused)return;
-            if(Input.GetKeyDown(KeyCode.Space)||Input.GetKeyDown(KeyCode.Return)||(Input.GetMouseButtonDown(0)&&!ReTuneBackgroundMusic.IsPointerOverVolumeControl()&&(mode==Mode.Opening||floatingDialogue!=null&&floatingDialogue.CanClickContinue())))Next();
+            if(Input.GetKeyDown(KeyCode.Space)||Input.GetKeyDown(KeyCode.Return)||(Input.GetMouseButtonDown(0)&&!ReTuneBackgroundMusic.IsPointerOverVolumeControl()&&(mode==Mode.Opening||mode==Mode.Ending&&(UnityEngine.EventSystems.EventSystem.current==null||!UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject())||floatingDialogue!=null&&floatingDialogue.CanClickContinue())))Next();
         }
         void Show()
         {
@@ -69,6 +69,9 @@ namespace ReTune.Scenes
             backButton.gameObject.SetActive(mode!=Mode.Opening&&index>0);
             if(mode==Mode.Opening){nextButton.gameObject.SetActive(false);pageLabel.gameObject.SetActive(false);}
             if(floatingDialogue!=null)floatingDialogue.Show(pages[index]);
+            if(mode==Mode.Shop||mode==Mode.Reply){var expressions=GetComponent<ReTuneVisitorExpressions>();if(expressions!=null)expressions.Show(ReTuneSession.customer,index);}
+            if(mode==Mode.Ending){var ending=GetComponent<ReTuneEndingStoryboard>();if(ending!=null)ending.Show(index);}
+            ReTuneProgress.Save(this,index);
             if(openingArtwork!=null)openingArtwork.SetActive(mode!=Mode.Opening || index==0);
             if(mode==Mode.Shop && index==dialogueEnd-1)controller.NarrativeAudio(false);
         }
@@ -77,11 +80,13 @@ namespace ReTune.Scenes
         {
             if(busy||controller!=null&&controller.PartsAnimationPaused)return;
             if(album!=null&&album.IsOpen)return;
-            if(floatingDialogue!=null&&floatingDialogue.ConsumeNext())return;
+            if(mode==Mode.Ending){var ending=GetComponent<ReTuneEndingStoryboard>();if(ending!=null&&ending.ConsumeNext())return;}
+            if(floatingDialogue!=null&&panel.activeSelf&&floatingDialogue.ConsumeNext())return;
             if(mode==Mode.Reply&&ReTuneSession.customer==2&&album!=null&&albumShownAt!=index&&pages[index].Contains("These are some of the photos that'll be on display."))
             {albumShownAt=index;album.Open(this);return;}
             if(mode==Mode.Opening){var storyboard=GetComponent<ReTuneOpeningStoryboard>();if(storyboard!=null){if(storyboard.IsTyping){storyboard.CompleteSubtitle();storyboard.CompleteTransition();return;}if(storyboard.IsTransitioning){storyboard.CompleteTransition();return;}if(storyboard.AdvanceSubtitle())return;}}
-            if(mode==Mode.Title){ReTuneSession.Reset();ReTuneSession.Begin(0);StartCoroutine(EnterShop());return;}
+            if(mode==Mode.Ending){var ending=GetComponent<ReTuneEndingStoryboard>();if(ending!=null&&ending.IsAnimating)return;}
+            if(mode==Mode.Title){ReTuneProgress.StartNew();ReTuneSession.Reset();ReTuneSession.Begin(0);StartCoroutine(EnterShop());return;}
             if(index+1<pages.Count){index++;Show();return;}
             if(mode==Mode.Opening)Go("00_Start");
             else if(mode==Mode.Shop)Go("02_Parts");
@@ -190,7 +195,8 @@ namespace ReTune.Scenes
         }
         public void ReplayOpening(){if(busy)return;ReTuneSession.Reset();Go("00_Opening");}
         public void ReturnToTitle(){if(busy)return;ReTuneSession.Reset();Go("00_Start");}
-        public void StepOut(){Application.Quit();}
+        public void ResumeGame(){if(!busy&&controller!=null)controller.ResumeGame();}
+        public void StepOut(){ReTuneExitDialog.RequestExit();}
         void Go(string name){busy=true;SceneManager.LoadScene("Assets/ReTuneScenes/Scenes/"+name+".unity");}
     }
 }

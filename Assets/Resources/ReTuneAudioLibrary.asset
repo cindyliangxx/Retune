@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 54fd71aef2d3d5c42b5268f73b81607a, type: 3}
+  m_Name: ReTuneAudioLibrary
+  m_EditorClassIdentifier: 
+  postman:
+  - {fileID: 8300000, guid: ffb1a9412bae8a140889a1324ff0663b, type: 3}
+  - {fileID: 8300000, guid: 31566659420516348971024545178ead, type: 3}
+  - {fileID: 8300000, guid: 9d5e3a948776fcb459d8b48d52fc83dd, type: 3}
+  guitarist:
+  - {fileID: 8300000, guid: a44351e3c4cd7f14ab4385acb9623519, type: 3}
+  - {fileID: 8300000, guid: b2544362be73a8d44a974dc893dddb69, type: 3}
+  - {fileID: 8300000, guid: c80a0aa5051a935459994e66535cdb4c, type: 3}
+  menuMusic: {fileID: 8300000, guid: abdf36e04395a914c96f9b3fd80307ab, type: 3}
+  dialogueMusic: {fileID: 8300000, guid: abdf36e04395a914c96f9b3fd80307ab, type: 3}
+  endingMusic: {fileID: 8300000, guid: e54497fde8c33734a940aa389b5bde9a, type: 3}
+

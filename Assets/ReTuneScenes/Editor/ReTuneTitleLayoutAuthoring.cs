@@ -38,7 +38,10 @@ public static class ReTuneTitleLayoutAuthoring
             if(review!=null){review.name="Review";review.gameObject.SetActive(true);Label(review,"Review",flow.nextLabel.font);}
             var tape=panel.Find("Tape");
             if(tape==null){var go=new GameObject("Tape",typeof(RectTransform),typeof(CanvasRenderer),typeof(Image),typeof(Button));go.layer=5;go.transform.SetParent(panel,false);tape=go.transform;}
-            tape.gameObject.SetActive(true);tape.GetComponent<Button>().interactable=false;
+            tape.gameObject.SetActive(true);
+            var tapeButton=tape.GetComponent<Button>();tapeButton.interactable=true;
+            while(tapeButton.onClick.GetPersistentEventCount()>0)UnityEditor.Events.UnityEventTools.RemovePersistentListener(tapeButton.onClick,0);
+            UnityEditor.Events.UnityEventTools.AddPersistentListener(tapeButton.onClick,flow.ResumeGame);
             Label(tape.GetComponent<Button>(),"Tape",flow.nextLabel.font);
             foreach(var button in panel.GetComponentsInChildren<Button>(true)){button.transition=Selectable.Transition.None;var image=button.GetComponent<Image>();if(image!=null){image.color=Color.clear;image.raycastTarget=button.interactable;}}
             var layout=cover.GetComponent<ReTuneTitleHotspots>();if(layout==null)layout=cover.gameObject.AddComponent<ReTuneTitleHotspots>();

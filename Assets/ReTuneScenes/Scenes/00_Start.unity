@@ -463,7 +463,7 @@ Camera:
   far clip plane: 1000
   field of view: 60
   orthographic: 1
-  orthographic size: 3.600445
+  orthographic size: 3.5999997
   m_Depth: 0
   m_CullingMask:
     serializedVersion: 2
@@ -488,7 +488,7 @@ Transform:
   m_GameObject: {fileID: 143973091}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.000790129, y: -0.00044499044, z: -10}
+  m_LocalPosition: {x: -0.0000005086263, y: 0.00000028610228, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -2580,11 +2580,23 @@ MonoBehaviour:
     m_PressedTrigger: Pressed
     m_SelectedTrigger: Selected
     m_DisabledTrigger: Disabled
-  m_Interactable: 0
+  m_Interactable: 1
   m_TargetGraphic: {fileID: 1541402328}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 1752003588}
+        m_TargetAssemblyTypeName: ReTune.Scenes.ReTuneNarrativePlayer, Assembly-CSharp
+        m_MethodName: ResumeGame
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: 
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &1221606817
 MonoBehaviour:
   m_ObjectHideFlags: 0

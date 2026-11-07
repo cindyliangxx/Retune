@@ -124,6 +124,7 @@ namespace ReTune.Scenes
                 }
                 if(flow.pageLabel!=null)flow.pageLabel.gameObject.SetActive(false);
             }
+            if(flow!=null)ReTuneCinematicSubtitle.Layout(flow,subtitleBarHeight,subtitleFontSize);
             FitArtwork();
         }
         void FitArtwork()
@@ -240,7 +241,7 @@ namespace ReTune.Scenes
         }
         void Update()
         {
-            if(!Application.isPlaying)return;
+            if(!Application.isPlaying||ReTuneExitDialog.IsOpen)return;
             if(current<0||current>=shots.Length||shots[current]==null)return;
             age+=Time.deltaTime;
             UpdateTyping(Time.unscaledDeltaTime);

@@ -41,13 +41,16 @@ namespace ReTune.Scenes
         }
         void SceneLoaded(Scene scene,LoadSceneMode mode)
         {
-            if(mode!=LoadSceneMode.Single)return;
+            // New Game loads the shop additively; it must also restore story music.
             if(scene.name=="00_Opening"){source.Stop();hasPlayback=false;started=false;paused=false;source.volume=0;}
             ApplyScene(scene.name);
         }
         void ApplyScene(string name)
         {
             blocked=name=="02_Parts"||name=="03_Performance";
+            var library=ReTuneAudioLibrary.Load();
+            var clip=library==null?source.clip:name=="05_Ending"?library.endingMusic:name=="01_Shop"||name=="04_Reply"?library.dialogueMusic:library.menuMusic;
+            if(!blocked&&clip!=null&&source.clip!=clip){source.Stop();source.clip=clip;hasPlayback=false;paused=false;}
             if(!blocked&&(name=="00_Start"||name=="01_Shop"||name=="04_Reply"||name=="05_Ending"))started=true;
             if(blocked)
             {
@@ -69,6 +72,7 @@ namespace ReTune.Scenes
         }
         void Update()
         {
+            if(started&&!blocked&&!ReTuneExitDialog.IsOpen&&source.clip!=null&&!source.isPlaying){source.Play();hasPlayback=true;paused=false;}
             if(source!=null)source.volume=Mathf.MoveTowards(source.volume,started&&!blocked?volume:0,Time.unscaledDeltaTime/.75f);
             if(Input.GetMouseButtonUp(0))SaveVolume();
         }

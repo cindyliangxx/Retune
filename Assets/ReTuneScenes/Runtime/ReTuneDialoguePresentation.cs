@@ -23,6 +23,7 @@ namespace ReTune.Scenes
         public void Configure()
         {
             if(player==null)player=GetComponent<ReTuneNarrativePlayer>();if(player==null)return;
+            if(player.mode==ReTuneNarrativePlayer.Mode.Ending)return;
             var panel=(RectTransform)player.panel.transform;
             panel.anchorMin=Vector2.zero;panel.anchorMax=new Vector2(1,0);panel.pivot=new Vector2(.5f,0);
             panel.anchoredPosition=new Vector2(0,24);panel.sizeDelta=new Vector2(-96,panelHeight);
@@ -55,6 +56,7 @@ namespace ReTune.Scenes
         }
         public void Show(string text)
         {
+            if(player!=null&&player.mode==ReTuneNarrativePlayer.Mode.Ending)return;
             Configure();
             string name="Narration";Color ink=new Color(.96f,.92f,.82f);Color accent=new Color(.87f,.81f,.67f);
             string[] prefixes={"Tuner:","Postman:","Guitarist:","Owner:","Photographer:","Michael:"};

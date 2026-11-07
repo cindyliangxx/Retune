@@ -17,6 +17,7 @@ namespace ReTune.Scenes
         void Start(){Apply();}
         public void Apply()
         {
+            if(!gameObject.scene.IsValid()||!gameObject.scene.isLoaded)return;
             controller=GetComponent<ReTuneSceneController>();if(controller==null)return;
             foreach(var root in gameObject.scene.GetRootGameObjects())
                 foreach(var button in root.GetComponentsInChildren<Button>(true))

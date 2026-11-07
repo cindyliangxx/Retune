@@ -1,0 +1,10 @@
+{
+  "Port": 8090,
+  "RequestTimeoutSeconds": 30,
+  "AutoStartServer": true,
+  "AllowBatchModeServer": false,
+  "EnableInfoLogs": false,
+  "NpmExecutablePath": "C:/Program Files/nodejs/npm.cmd",
+  "AllowRemoteConnections": false,
+  "AllowPackageInstallation": false
+}

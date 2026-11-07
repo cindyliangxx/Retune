@@ -63,7 +63,7 @@ public static class ReTuneCompleteStoryAuthoring
             Set(flow.heading.rectTransform,25,20,330,80);Set(flow.body.rectTransform,25,110,330,180);Set(flow.nextButton.GetComponent<RectTransform>(),20,320,340,80);
             Button(panel,"Replay Opening",20,420,340,80,flow.ReplayOpening);Button(panel,"Step Out",20,520,340,80,flow.StepOut);flow.pageLabel.gameObject.SetActive(false);
         }
-        if(mode==2||mode==3)Button(canvas.transform,"Title",1030,20,220,76,flow.ReturnToTitle);
+        // Story scenes use Escape for navigation; no Title button.
         if(!scene.GetRootGameObjects().Any(r=>r.GetComponent<UnityEngine.EventSystems.EventSystem>()!=null))
         {var events=new GameObject("EventSystem",typeof(UnityEngine.EventSystems.EventSystem),typeof(UnityEngine.EventSystems.StandaloneInputModule));UnityEngine.SceneManagement.SceneManager.MoveGameObjectToScene(events,scene);}
         EditorSceneManager.SaveScene(scene);

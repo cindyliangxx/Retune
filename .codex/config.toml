@@ -1,0 +1,10 @@
+[mcp_servers.unity]
+command = "C:/Program Files/nodejs/node.exe"
+args = ["C:/Retune/Retune/Packages/com.gamelovers.mcp-unity/Server~/build/index.js"]
+cwd = "C:/Retune/Retune"
+startup_timeout_sec = 30
+tool_timeout_sec = 60
+
+[mcp_servers.unity.env]
+MCP_UNITY_SETTINGS_PATH = "C:/Retune/Retune/ProjectSettings/McpUnitySettings.json"
+MCP_UNITY_AUTH_TOKEN_PATH = "C:/Retune/Retune/Library/McpUnity/bridge-token"
