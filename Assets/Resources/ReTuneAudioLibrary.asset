@@ -24,6 +24,10 @@ MonoBehaviour:
   - {fileID: 8300000, guid: 8d63d8dc8bce14df0079b4839b9c3a68, type: 3}
   - {fileID: 8300000, guid: e5946a1de33dbd2f7992d25206e71ad6, type: 3}
   - {fileID: 8300000, guid: dabe12ab008ba5b23dae41220e6ecec1, type: 3}
+  photographer:
+  - {fileID: 8300000, guid: ffb1a9412bae8a140889a1324ff0663b, type: 3}
+  - {fileID: 8300000, guid: 31566659420516348971024545178ead, type: 3}
+  - {fileID: 8300000, guid: 9d5e3a948776fcb459d8b48d52fc83dd, type: 3}
   menuMusic: {fileID: 8300000, guid: abdf36e04395a914c96f9b3fd80307ab, type: 3}
   dialogueMusic: {fileID: 8300000, guid: abdf36e04395a914c96f9b3fd80307ab, type: 3}
   endingMusic: {fileID: 8300000, guid: e54497fde8c33734a940aa389b5bde9a, type: 3}
