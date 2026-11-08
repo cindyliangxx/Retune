@@ -34,12 +34,14 @@ namespace ReTune.Scenes
         ReTuneTextGlow[] glows;
         float[] hover;
         Vector2 pointer;
+        Vector2 logoBasePosition;
         float elapsed;
         void OnEnable()
         {
             FitBackground();
             if(!Application.isPlaying)return;
             elapsed=0;pointer=Vector2.zero;
+            if(logo!=null)logoBasePosition=logo.anchoredPosition;
             int count=menus==null?0:menus.Length;
             fades=new CanvasGroup[count+1];labels=new Text[count];glows=new ReTuneTextGlow[count];hover=new float[count];
             if(logo!=null)fades[0]=Fade(logo);
@@ -95,8 +97,9 @@ namespace ReTune.Scenes
                         float blend=Mathf.SmoothStep(0,1,Mathf.Clamp01(idleTime/.6f));
                         float phase=idleTime*Mathf.PI*2/Mathf.Max(.1f,logoBreathPeriod);
                         float breath=(1-Mathf.Cos(phase))*.5f;
-                        logo.anchoredPosition=new Vector2(0,-12*(1-eased)+Mathf.Sin(phase)*logoFloatAmplitude*blend);
-                        logo.localScale=Vector3.one*(1+breath*logoScaleAmplitude*blend);
+                        // 位置：保留手动基础位置，仅在其上叠加上下悬浮（相对偏移，不再固定 X/Y）
+                        logo.anchoredPosition=logoBasePosition+new Vector2(0,Mathf.Sin(phase)*logoFloatAmplitude*blend);
+                        // logo.localScale=Vector3.one*(1+breath*logoScaleAmplitude*blend); // 缩放仍手动控制
                         var image=logo.GetComponent<Image>();
                         if(image!=null)image.color=new Color(1,1,1,1-glowBreath+glowBreath*breath);
                     }

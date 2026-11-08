@@ -297,7 +297,7 @@ Camera:
   far clip plane: 1000
   field of view: 60
   orthographic: 1
-  orthographic size: 3.5999997
+  orthographic size: 3.600445
   m_Depth: 0
   m_CullingMask:
     serializedVersion: 2
@@ -322,7 +322,7 @@ Transform:
   m_GameObject: {fileID: 89995646}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.0000005086263, y: 0.00000028610228, z: -10}
+  m_LocalPosition: {x: -0.000790129, y: -0.00044499044, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -486,6 +486,10 @@ MonoBehaviour:
   - {fileID: 8300000, guid: 8d63d8dc8bce14df0079b4839b9c3a68, type: 3}
   - {fileID: 8300000, guid: e5946a1de33dbd2f7992d25206e71ad6, type: 3}
   - {fileID: 8300000, guid: dabe12ab008ba5b23dae41220e6ecec1, type: 3}
+  photographerStems:
+  - {fileID: 8300000, guid: ffb1a9412bae8a140889a1324ff0663b, type: 3}
+  - {fileID: 8300000, guid: 31566659420516348971024545178ead, type: 3}
+  - {fileID: 8300000, guid: 9d5e3a948776fcb459d8b48d52fc83dd, type: 3}
   usePostmanExperiment: 1
   postmanMusicVolume: 0.4
   postmanNoiseVolume: 0.25
@@ -2185,7 +2189,7 @@ RectTransform:
   m_GameObject: {fileID: 995100004}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 1.0003089, y: 1.0003089, z: 1.0003089}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 995100009}

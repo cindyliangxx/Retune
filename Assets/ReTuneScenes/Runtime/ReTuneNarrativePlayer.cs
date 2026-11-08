@@ -30,7 +30,7 @@ namespace ReTune.Scenes
         public GameObject visitorPortraits;
         readonly List<string> pages=new List<string>();
         int index, dialogueEnd;
-        bool begun, busy;
+        bool begun, busy, portraitInitialized;
         ReTuneNarrativeBook book;
         ReTuneDialoguePresentation floatingDialogue;
         ReTuneAlbumSequence album;
@@ -49,7 +49,7 @@ namespace ReTune.Scenes
                 if(mode==Mode.Shop){pages.AddRange(customer.dialogue);dialogueEnd=pages.Count;}
                 else {pages.AddRange(customer.reply);pages.AddRange(customer.departure);controller.NarrativeAudio(true);}
             }
-            floatingDialogue=mode==Mode.Ending?null:GetComponent<ReTuneDialoguePresentation>();album=GetComponent<ReTuneAlbumSequence>();index=mode==Mode.Ending?0:Mathf.Clamp(ReTuneProgress.ConsumePage(this),0,Mathf.Max(0,pages.Count-1));Show();
+            floatingDialogue=mode==Mode.Ending?null:GetComponent<ReTuneDialoguePresentation>();album=GetComponent<ReTuneAlbumSequence>();index=mode==Mode.Ending?0:Mathf.Clamp(ReTuneProgress.ConsumePage(this),0,Mathf.Max(0,pages.Count-1));portraitInitialized=false;Show();
             if(mode==Mode.Shop&&!busy)StartCoroutine(SlideVisitor());
         }
         void Update()
@@ -64,7 +64,14 @@ namespace ReTune.Scenes
             heading.text=mode==Mode.Opening?"The old street":mode==Mode.Ending?"A letter finds its way home":"DAY "+new[]{1,4,8,12}[ReTuneSession.customer].ToString("00")+" / "+controller.story.customers[ReTuneSession.customer].name;
             body.text=pages[index];
             if(mode==Mode.Opening){var storyboard=GetComponent<ReTuneOpeningStoryboard>();if(storyboard!=null)storyboard.Show(index);}
-            if(visitorPortraits!=null)visitorPortraits.SetActive(mode==Mode.Shop||mode==Mode.Reply&&index<book.customers[ReTuneSession.customer].reply.Length);pageLabel.text=(index+1)+" / "+pages.Count;
+            if(visitorPortraits!=null)
+            {
+                bool showPortrait=mode==Mode.Shop||(mode==Mode.Reply&&index<book.customers[ReTuneSession.customer].reply.Length);
+                if(!portraitInitialized){visitorPortraits.SetActive(showPortrait);portraitInitialized=true;}
+                else if(showPortrait&&!visitorPortraits.activeSelf)visitorPortraits.SetActive(true);
+                else if(!showPortrait&&visitorPortraits.activeSelf&&mode==Mode.Reply)StartCoroutine(SlideVisitorOut());
+            }
+            pageLabel.text=(index+1)+" / "+pages.Count;
             nextLabel.text=index<pages.Count-1?"Next":mode==Mode.Shop?"Open Music Box":mode==Mode.Reply?(ReTuneSession.customer<3?"Next Visitor":"Epilogue"):mode==Mode.Ending?"Return to Title":"Continue";
             backButton.gameObject.SetActive(mode!=Mode.Opening&&index>0);
             if(mode==Mode.Opening){nextButton.gameObject.SetActive(false);pageLabel.gameObject.SetActive(false);}
@@ -90,11 +97,11 @@ namespace ReTune.Scenes
             if(index+1<pages.Count){index++;Show();return;}
             if(mode==Mode.Opening)Go("00_Start");
             else if(mode==Mode.Shop)Go("02_Parts");
-            else if(mode==Mode.Reply){if(ReTuneSession.customer<3){ReTuneSession.Begin(ReTuneSession.customer+1);Go("01_Shop");}else Go("05_Ending");}
+            else if(mode==Mode.Reply){if(ReTuneSession.customer<3){StartCoroutine(AdvanceToNextVisitor());}else Go("05_Ending");}
             else {ReTuneSession.Reset();Go("00_Start");}
         }
         [Header("New Game transition (seconds)")]
-        [Min(.1f)] public float menuExitDuration=.55f, backgroundBlendDuration=.35f, visitorEntranceDuration=1.1f;
+        [Min(.1f)] public float menuExitDuration=.55f, backgroundBlendDuration=.35f, visitorEntranceDuration=1.1f, visitorExitDuration=1f;
         IEnumerator EnterShop()
         {
             busy=true;
@@ -116,15 +123,16 @@ namespace ReTune.Scenes
                 }
             }
             var targets=new List<RectTransform>();
-            if(motion!=null){if(motion.logo!=null)targets.Add(motion.logo);if(motion.menus!=null)foreach(var m in motion.menus)if(m!=null&&!targets.Contains(m))targets.Add(m);}
-            else if(panel!=null)targets.Add(panel.GetComponent<RectTransform>());
+            var directions=new List<Vector2>();
+            if(motion!=null){if(motion.logo!=null){targets.Add(motion.logo);directions.Add(Vector2.left);}if(motion.menus!=null)foreach(var m in motion.menus)if(m!=null&&!targets.Contains(m)){targets.Add(m);directions.Add(Vector2.right);}}
+            else if(panel!=null){targets.Add(panel.GetComponent<RectTransform>());directions.Add(Vector2.left);}
             var starts=new List<Vector2>();foreach(var t in targets)starts.Add(t.anchoredPosition);
             var operation=SceneManager.LoadSceneAsync(ReTuneSceneController.ScenePath(ReTuneSceneController.Screen.Shop),LoadSceneMode.Additive);
             operation.allowSceneActivation=false;
             for(float t=0;t<menuExitDuration;t+=Time.unscaledDeltaTime)
             {
                 float u=Mathf.SmoothStep(0,1,t/menuExitDuration);
-                for(int i=0;i<targets.Count;i++)targets[i].anchoredPosition=starts[i]+Vector2.left*1600*u;
+                for(int i=0;i<targets.Count;i++)targets[i].anchoredPosition=starts[i]+directions[i]*1600*u;
                 yield return null;
             }
             foreach(var target in targets)target.gameObject.SetActive(false);
@@ -192,6 +200,34 @@ namespace ReTune.Scenes
             }
             if(panel!=null)panel.SetActive(true);
             busy=false;if(controller!=null)controller.StoryTransitionLocked=false;
+        }
+        IEnumerator SlideVisitorOut()
+        {
+            busy=true;if(controller!=null)controller.StoryTransitionLocked=true;
+            if(visitorPortraits!=null && visitorPortraits.activeSelf)
+            {
+                var portrait=visitorPortraits.transform;var start=portrait.localPosition;
+                var rect=portrait as RectTransform;
+                var camera=controller!=null?controller.worldCamera:null;
+                float distance=camera!=null?camera.orthographicSize*camera.aspect*2+4:20;
+                if(rect!=null){var parent=rect.parent as RectTransform;distance=Mathf.Max(320,(parent!=null?parent.rect.width:1280)*.35f);}
+                var offset=Vector3.left*distance+Vector3.up*(rect!=null?32:.25f);
+                var target=start+offset;
+                for(float t=0;t<visitorExitDuration;t+=Time.unscaledDeltaTime)
+                {
+                    float p=Mathf.Clamp01(t/visitorExitDuration);
+                    float u=p<.5f?8f*p*p*p*p:1f-Mathf.Pow(-2f*p+2f,4)*.5f; // Ease.InOutQuart：先慢后快再缓停，向左平滑退场
+                    portrait.localPosition=Vector3.LerpUnclamped(start,target,u);yield return null;
+                }
+                portrait.localPosition=target;portrait.gameObject.SetActive(false);
+            }
+            busy=false;if(controller!=null)controller.StoryTransitionLocked=false;
+        }
+        IEnumerator AdvanceToNextVisitor()
+        {
+            if(visitorPortraits!=null&&visitorPortraits.activeSelf)yield return SlideVisitorOut();
+            ReTuneSession.Begin(ReTuneSession.customer+1);
+            Go("01_Shop");
         }
         public void ReplayOpening(){if(busy)return;ReTuneSession.Reset();Go("00_Opening");}
         public void ReturnToTitle(){if(busy)return;ReTuneSession.Reset();Go("00_Start");}

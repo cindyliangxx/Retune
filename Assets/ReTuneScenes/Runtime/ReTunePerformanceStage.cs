@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
+using DG.Tweening;
 namespace ReTune.Scenes
 {
     public sealed class ReTunePerformanceStage : MonoBehaviour
@@ -43,12 +44,14 @@ namespace ReTune.Scenes
         {
             if(!controller.trackA.isPlaying){QTEActive=false;return;}
             float now=SongTime();
-            if(now>BeatDue+hitWindow){Resolve(false);}
+            if(now>BeatDue+overShrinkDuration){Resolve(false);}
             float due=BeatDue;
-            QTEActive=now>=due-approachDuration && now<=due+hitWindow;
+            QTEActive=now>=due-approachDuration && now<=due+overShrinkDuration;
             age=approachDuration+now-due;
         }
         public float approachDuration=1.5f, hitWindow=.22f;
+        [Tooltip("外圈从 scale=1 继续收到 0 的时长，也是判定窗口（scale 1→0 都算成功）")]
+        public float overShrinkDuration=.8f;
         public UnityEvent OnQTESuccess=new UnityEvent(), OnQTEFailure=new UnityEvent(), StageClear=new UnityEvent();
         [Header("复用 Oscillogram 波浪，默认反馈仅作用于波形")]
         public Oscillogram waveA, waveB;
@@ -64,6 +67,16 @@ namespace ReTune.Scenes
         [Tooltip("使用音乐能量驱动平滑波浪，关闭后显示原始采样尖峰")]
         public bool smoothMusicalWave=true;
         [Min(1)] public float maximumWaveBoost=12;
+        [Header("收圈 QTE：消除时渐隐 + 放大消散")]
+        public float dissolveDuration = 0.4f;
+        public float dissolveScale = 1.6f;
+        [Header("QTE 失败镜头抖动")]
+        public float cameraShakeStrength = 0.4f;
+        public float cameraShakeDuration = 0.35f;
+        [Header("A/D 阻尼（Lerp 平滑，0 = 关闭瞬时响应）")]
+        [Range(0, 30)] public float damping = 10f;
+        [Header("安全区切换动画（OutBounce）")]
+        public float zoneAnimDuration = 1.2f;
         readonly ReTuneAudioWaveSampler audioWave=new ReTuneAudioWaveSampler();
         public float Progress { get; private set; }
         public bool QTEActive { get; private set; }
@@ -71,6 +84,12 @@ namespace ReTune.Scenes
         int hits;
         bool initialized, completed;
         Image pointerImage;
+        bool ringShown;
+        Image ringImage;
+        Color ringBaseColor;
+        float currentSpeed;
+        float zoneAngle = 90;
+        Tween zoneTween;
         public void ResetStage()
         {
             // 四位顾客逐步改变漂移速度与目标停留时间；沿用当前持续控制加点击玩法。
@@ -78,7 +97,7 @@ namespace ReTune.Scenes
             else if(ReTuneSession.customer==1){driftSpeed=14;targetChangeInterval=new Vector2(5,7);}
             else if(ReTuneSession.customer==2){driftSpeed=5;targetChangeInterval=new Vector2(9,12);}
             else {driftSpeed=12;targetChangeInterval=new Vector2(5,8);}
-            playerAngle=40;ChooseTarget();driftDirection=1;Progress=0;wait=1;age=phase=elapsed=alignedTime=successPulse=missPulse=clearDelay=0;
+            playerAngle=40;zoneAngle=90;zoneTween?.Kill();ringShown=false;currentSpeed=0;ChooseTarget();driftDirection=1;Progress=0;wait=1;age=phase=elapsed=alignedTime=successPulse=missPulse=clearDelay=0;
             hits=0;beatIndex=audioLoops=0;previousAudioTime=0;QTEActive=completed=false;initialized=true;
             if(pointerVisual!=null)pointerImage=pointerVisual.GetComponent<Image>();
             if(controller.holdFill!=null)controller.holdFill.transform.parent.gameObject.SetActive(false);
@@ -92,7 +111,9 @@ namespace ReTune.Scenes
             elapsed+=dt;
             targetTimer-=dt;if(targetTimer<=0)ChooseTarget();
             float correction=((Input.GetKey(KeyCode.A)?1:0)-(Input.GetKey(KeyCode.D)?1:0))*moveSpeed;
-            playerAngle=Mathf.Clamp(playerAngle+(correction+(autoDrift?driftDirection*driftSpeed:0))*dt,0,180);
+            float targetSpeed=correction+(autoDrift?driftDirection*driftSpeed:0);
+            currentSpeed=damping>0?Mathf.Lerp(currentSpeed,targetSpeed,Mathf.Clamp01(damping*dt)):targetSpeed;
+            playerAngle=Mathf.Clamp(playerAngle+currentSpeed*dt,0,180);
             if(playerAngle<=0)driftDirection=1;else if(playerAngle>=180)driftDirection=-1;
             bool aligned=Mathf.Abs(playerAngle-targetAngle)<=tolerance;
             if(aligned){alignedTime+=dt;Progress+=Mathf.Max(0,gainRate)*(IsPrecise?Mathf.Max(1,preciseMultiplier):1)*dt;}
@@ -101,7 +122,7 @@ namespace ReTune.Scenes
             phase=Mathf.Repeat(phase+dt*Mathf.Max(.01f,frequency)*Mathf.PI*2,Mathf.PI*2);
             successPulse=Mathf.MoveTowards(successPulse,0,dt*2);missPulse=Mathf.MoveTowards(missPulse,0,dt*2);
             if(UsesBeatmap)TickBeatmap();
-            else if(QTEActive){age+=dt;if(age>approachDuration+hitWindow)Resolve(false);}
+            else if(QTEActive){age+=dt;if(age>approachDuration+overShrinkDuration)Resolve(false);}
             else {wait-=dt;if(wait<=0){QTEActive=true;age=0;}}
             if(Progress>=100){Progress=100;completed=true;QTEActive=false;successPulse=missPulse=0;StageClear.Invoke();}
             Present();
@@ -114,11 +135,22 @@ namespace ReTune.Scenes
             // 避免换区后几乎留在原处。
             if(Mathf.Abs(targetAngle-previous)<margin*2)targetAngle=previous<90?180-margin:margin;
             targetTimer=Random.Range(Mathf.Max(1,targetChangeInterval.x),Mathf.Max(Mathf.Max(1,targetChangeInterval.x),targetChangeInterval.y));
+            AnimateZone();
+        }
+        void AnimateZone()
+        {
+            zoneTween?.Kill();
+            zoneTween=DOTween.To(()=>zoneAngle,x=>zoneAngle=x,targetAngle,zoneAnimDuration).SetEase(Ease.OutBounce);
+        }
+        void ShakeCamera()
+        {
+            if(controller==null || controller.worldCamera==null)return;
+            controller.worldCamera.transform.DOShakeRotation(cameraShakeDuration,new Vector3(0f,0f,cameraShakeStrength),15,90f);
         }
         public void ClickQTE()
         {
             if(!initialized || !controller.CanInteract || completed || !QTEActive)return;
-            bool success=UsesBeatmap?Mathf.Abs(SongTime()-BeatDue)<=Mathf.Max(.01f,hitWindow):Mathf.Abs(age-approachDuration)<=Mathf.Max(.01f,hitWindow);
+            bool success=UsesBeatmap?(SongTime()>=BeatDue&&SongTime()<=BeatDue+overShrinkDuration):(age>=approachDuration&&age<=approachDuration+overShrinkDuration);
             Resolve(success);Present();
         }
         void Resolve(bool success)
@@ -126,19 +158,19 @@ namespace ReTune.Scenes
             if(UsesBeatmap)beatIndex++;
             QTEActive=false;wait=schedule!=null?schedule.NextInterval():Random.Range(2.5f,4.5f);
             if(success){hits++;if(enableWaveFeedback)successPulse=1;OnQTESuccess.Invoke();}
-            else {if(enableWaveFeedback)missPulse=1;if(enableTargetKick)targetAngle=Mathf.Clamp(targetAngle+Random.Range(-targetKick,targetKick),0,180);OnQTEFailure.Invoke();}
+            else {if(enableWaveFeedback){missPulse=1;ShakeCamera();}if(enableTargetKick){targetAngle=Mathf.Clamp(targetAngle+Random.Range(-targetKick,targetKick),0,180);AnimateZone();}OnQTEFailure.Invoke();}
             if(controller.hint!=null)controller.hint.text=success?"PERFECT":"MISS";
         }
         void Present()
         {
             if(playerGear!=null)playerGear.position=Point(playerAngle);
-            if(targetGear!=null)targetGear.position=Point(targetAngle);
+            if(targetGear!=null)targetGear.position=Point(zoneAngle);
             if(pointerVisual!=null)pointerVisual.localRotation=Quaternion.Euler(0,0,playerAngle-40);
-            if(targetVisual!=null)targetVisual.localRotation=Quaternion.Euler(0,0,targetAngle-40);
+            if(targetVisual!=null)targetVisual.localRotation=Quaternion.Euler(0,0,zoneAngle-40);
             if(broadZone!=null){broadZone.innerRadius=276;broadZone.outerRadius=282;}
             if(preciseZone!=null){preciseZone.innerRadius=267;preciseZone.outerRadius=274;}
-            if(broadZone!=null)broadZone.SetRange(targetAngle,tolerance,new Color(.58f,.78f,.85f,.95f));
-            if(preciseZone!=null)preciseZone.SetRange(targetAngle,Mathf.Min(preciseTolerance,tolerance),new Color(1,.82f,.4f,1));
+            if(broadZone!=null)broadZone.SetRange(zoneAngle,tolerance,new Color(.58f,.78f,.85f,.95f));
+            if(preciseZone!=null)preciseZone.SetRange(zoneAngle,Mathf.Min(preciseTolerance,tolerance),new Color(1,.82f,.4f,1));
             if(pointerImage!=null)pointerImage.color=IsPrecise?new Color(1,.94f,.78f,1):Color.white;
             float amount=Progress/100;
             if(useAudioWaveform)
@@ -152,7 +184,7 @@ namespace ReTune.Scenes
                 if(waveA!=null)waveA.DrawSharedWave(phase,amount,successPulse*.18f,missPulse*.12f);
                 if(waveB!=null)waveB.DrawSharedWave(phase,1,0,0);
             }
-            if(controller.approachRing!=null){controller.approachRing.gameObject.SetActive(QTEActive);controller.approachRing.localScale=Vector3.one*(1+Mathf.Clamp01(1-age/Mathf.Max(.1f,approachDuration))*2);}
+            if(controller.approachRing!=null)UpdateApproachRing();
             if(controller.phraseFill!=null)controller.phraseFill.fillAmount=amount;
             if(controller.stabilityFill!=null)controller.stabilityFill.fillAmount=amount;
             if(controller.stats!=null)controller.stats.text=$"Harmony {Progress:0}%\nPerfect {hits}";
@@ -160,6 +192,33 @@ namespace ReTune.Scenes
             controller.SetWaveMix(amount);
         }
         public Vector3 Point(float angle){float a=angle*Mathf.Deg2Rad;return new Vector3(trackCenter.x+Mathf.Cos(a)*trackRadius,trackCenter.y+Mathf.Sin(a)*trackRadius,0);}
+        void UpdateApproachRing()
+        {
+            if(ringImage==null){ringImage=controller.approachRing.GetComponent<Image>();if(ringImage!=null){ringBaseColor=ringImage.color;ringBaseColor.a=1f;}}
+
+            if(QTEActive)
+            {
+                if(!ringShown)
+                {
+                    ringShown=true;
+                    controller.approachRing.DOKill();
+                    controller.approachRing.gameObject.SetActive(true);
+                    if(ringImage!=null)ringImage.color=ringBaseColor;
+                }
+                float ringScale;
+                if(age<approachDuration)ringScale=3f-2f*(age/Mathf.Max(.1f,approachDuration)); // 3→1
+                else ringScale=Mathf.Max(0f,1f-(age-approachDuration)/Mathf.Max(.1f,overShrinkDuration)); // 1→0
+                controller.approachRing.localScale=Vector3.one*ringScale;
+            }
+            else if(ringShown)
+            {
+                ringShown=false;
+                controller.approachRing.DOKill();
+                if(ringImage!=null)ringImage.DOFade(0f,dissolveDuration);
+                controller.approachRing.DOScale(controller.approachRing.localScale*dissolveScale,dissolveDuration).SetEase(Ease.OutExpo)
+                    .OnComplete(()=>{if(!QTEActive)controller.approachRing.gameObject.SetActive(false);});
+            }
+        }
     }
 }
 
